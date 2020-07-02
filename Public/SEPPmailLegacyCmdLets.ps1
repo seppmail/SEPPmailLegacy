@@ -9,14 +9,14 @@ function Get-SLLicenseInfo
     
     begin
     {
-        $conf = Get-SLConfig
+        Set-SLConfig |out-null
     }
     
     process
     {
-        $urlroot = New-SLUrlRoot -FQDN $conf.SEPPmailFQDN -adminPort $conf.adminPort
+        $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
         $uri = $urlroot + 'statistics' + '?' + 'returnType' + '=' + 'CSV'
-        $csvstats = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $conf.secret | ConvertFrom-Csv -Delimiter ';'
+        $csvstats = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
         #'Account last used' Datum länger als 3 Monate her - keine Lizenz
         # wenn 'May not sign mails'-like 'YES' UND 'May not encrypt mails' -like 'YES - keine Lizenz verbraucht == Deaktiviert
 
@@ -79,16 +79,18 @@ function Get-SLGroupInfo
 
     begin
     {
-        $conf = Get-SLConfig
+        #Write-Verbose 'Writing SLConfig to $global:SLConfig'
+        Set-SLConfig |out-null
     }
 
     process
     {
-        $urlroot = New-SLUrlRoot -FQDN $conf.SEPPmailFQDN -adminPort $conf.adminPort
+        $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
         $uri = $urlroot + 'groupinfo' + '?' + 'returnType' + '=' + 'CSV'
-        $groupraw = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $conf.secret | ConvertFrom-Csv -Delimiter ';'
-
-        # Transform output to HT-Array and make sure to have proper values everywhere. 
+        Write-Verbose 'Call REST-API'
+        $groupraw = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
+        
+        Write-Verbose 'Transform output to HT-Array and make sure to have proper values everywhere. '
         # [0] returns object with 2 members 'group name' and 'member names'
         # GroupName param set
         if ($groupName)
@@ -144,12 +146,12 @@ function Get-SLStatsInfo
 
     begin
     {
-        $conf = Get-SLConfig
+        Set-SLConfig |out-null |out-null
     }
 
     process 
     {
-        $urlroot = New-SLUrlRoot -FQDN $conf.SEPPmailFQDN -adminPort $conf.adminPort
+        $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
         if ($rebuild)
         {
             $uribase = $urlroot + 'statistics' + '?' + 'returnType' + '=' + 'CSV' + '&rebuildList'
@@ -162,7 +164,7 @@ function Get-SLStatsInfo
         if ($type -like 'user') 
         {
             $uri = $uribase + '&statisticsType=user'
-            $userStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $conf.secret | ConvertFrom-Csv -Delimiter ';'
+            $userStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
             $userStatsRaw.'accountLastUsed'
             $userArray = @()
             $userArray = $userStatsRaw | ForEach-Object `
@@ -201,7 +203,7 @@ function Get-SLStatsInfo
         if ($type -like 'domain') 
         {
             $uri = $uribase + '&statisticsType=domain'
-            $domStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $conf.secret | ConvertFrom-Csv -Delimiter ';'
+            $domStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
             Write-Verbose "Creating output Hashtables"
             $domArray = @()
             $domArray = $domstatsraw | ForEach-Object `
@@ -295,8 +297,8 @@ function Get-SLEncInfo
     
     begin
     {
-        $conf = Get-SLConfig
-        $urlroot = New-SLUrlRoot -FQDN $conf.SEPPmailFQDN -adminPort $conf.adminPort
+        Set-SLConfig |out-null
+        $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
     }
     
     process
@@ -316,7 +318,7 @@ function Get-SLEncInfo
             $uri = "{0}{1}/?mailAddress={2}" -f $urlroot, 'encinfo', $eMailAddress
         }
         
-        $rawdata = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $conf.secret
+        $rawdata = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret
         switch ($PSCmdlet.ParameterSetname) 
         {
             personal
@@ -386,13 +388,13 @@ function New-SLGINAUser
     
     begin
     {
-        $conf = Get-SLConfig
+        Set-SLConfig |out-null
     }
     
     process
     {
 
-        $urlRoot = New-SLUrlRoot -FQDN $conf.SEPPmailFQDN -adminPort $conf.adminPort
+        $urlRoot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
         $uri = $urlRoot + 'newginauser'
         $userData = [ordered]@{
             email    = $eMailAddress
@@ -405,7 +407,7 @@ function New-SLGINAUser
             Uri            = $uri 
             Method         = 'POST '
             Authentication = 'Basic'
-            Credential     = $conf.secret
+            Credential     = $SLConfig.secret
             ContentType    = "application/json"
             body           = $userData
         }

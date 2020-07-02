@@ -3,7 +3,7 @@ function Set-SLConfig {
 .SYNOPSIS
     Sets the Config to a defined SEPPmail instance and credential
 .DESCRIPTION
-    Use this commandlet to define a SEPPmail Legacy configuration (SLConfig) for the SL Commandlets. Each SLConfig is stored with its FQND and the extension .config in the SLCOnfig directory. If you run Set-SLConfig, you need to specify a FQDN for a SEPPmail. The CmdLet reads the config, copies it over the default config (current.config) and loads it into the $SLConfig variable for use with other CmdLets.
+    Use this commandlet to define a SEPPmail Legacy configuration (SLConfig) for the SL Commandlets. Each SLConfig is stored with its FQND and the extension .config in the SLConfig directory. If you run Set-SLConfig, you need to specify a FQDN for a SEPPmail. The CmdLet reads the config, copies it over the default config (current.config) and loads it into the $SLConfig variable for use with other CmdLets.
 .EXAMPLE
     PS> Set-SLConfig -SEPPmailFQDN securemail.contoso.de
     This will read the config file for the FQDN and set it as current config (stores in in the global variable $SLConfig)
@@ -22,12 +22,12 @@ function Set-SLConfig {
             ValueFromPipelineByPropertyName = $true
         )]
         [String]$SEPPmailFQDN
-        
+
     )
 
     begin
     {
-        $SLConfig = $null
+        $conf = $null
     }
     
     process
@@ -37,6 +37,7 @@ function Set-SLConfig {
             $SLConfigFilePath = (Join-Path -Path $SLConfigPath -ChildPath $SEPPmailFQDN) + '.config'
         }
         else {
+            Write-Verbose "No FQDN specified, load default config file"
             $SLConfigFilePath = Join-Path -Path $SLConfigPath -ChildPath 'SLConfig.config'
         }
 
@@ -63,9 +64,12 @@ function Set-SLConfig {
         {
             $secureSecret = Get-Secret $conf.Secret -Vault $conf.secretVaultName
         }
+        <#
+        Write-Verbose "Writing default-Config File"
+        $defaultconfigFilePath = Join-Path $SLConfigFilePath -ChildPath 'CurrentConfig.config'
+        $conf = Set-Content $defaultconfigFilePath | ConvertFrom-Json
+        #>
         Write-Verbose "Writing securesecret to config variable."
-        ### 
-
         $global:SLConfig = [ordered]@{
             SEPPmailFQDN    = $conf.SEPPmailFQDN
             Secret          = $secureSecret
@@ -79,7 +83,7 @@ function Set-SLConfig {
         if (!(Test-Path $SLConfigFilePath)) {
             Write-Warning 'There is no current configuration file defined (SLConfig.config). Run New-SLConfig without the -NotCurrent parameter to create one.'
         }
-        return $global:SLConfig
+        return $conf
     }
 }
 

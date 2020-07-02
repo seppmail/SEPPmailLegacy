@@ -12,7 +12,7 @@
 RootModule = '.\SEPPmailLegacy.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.5'
+ModuleVersion = '0.5.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -127,7 +127,10 @@ PrivateData = @{
         ReleaseNotes = 
 @'
 110520: Initial release based on API Legacy Version 0.5
+
+020720: Fixing Get-SLConfig findings 0.5.1
 '@
+
 
         # Prerelease string of this module
         Prerelease = 'alpha1'

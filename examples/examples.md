@@ -2,16 +2,27 @@
 
 The modules output are PSObjects for easier processing. Read the LegacyAPI documentation for explanation of the data.
 
-## Configuration examples
+## Manage Configurations
 
-### Find out the current used configuration
+## Creating a new configuration file with New-SLConfig
 
-Get-SLConfig - reads the corrent config and displays the settings
-Test-SLConfig - Tests the config by trying to reach the SEPPmail appliance and retrieve some data.
+You need to run this before operating the module otherise it will not know where to connect to. New-SLConfig asks for FQDN and Credential parameters and
+creates a config file with the name FQDN.config
 
-### Create a new configuration
+By default it also copies this file to the SLConfig.config file which is the default config. You can turn off this behavior by using the -notcurrent parameter.
+If you want to immediately operato with the config use $global:SLConfig = New-SLConfig
 
-Set-SLConfig - Changes an existing config with new values
+### Using multiple configurations
+
+As most customers have multiple SEPPmail instances, you can store multiple config files and use them.
+
+Calling Set-SLConfig will always try to read the Default Config file SLConfig.config and load it, except you speficy a FQDN parameter.
+
+So if you have created multiple config files with new-slconfig, SET-SLConfig can switch between them.
+
+### Testing if a configuration works
+
+Test-SLConfig tests the config by trying to reach the SEPPmail appliance and retrieve some data.
 
 
 ## License examples
@@ -61,6 +72,8 @@ Get-SLEncInfo -personal -encModePer PGP
 ### Show external recipients having GINA as encryption method
 
 Get-SLEncInfo -personal -encModePer GINA
+Get-SLEncInfo -personal -encModePer GINA|where registered -eq 1
+Get-SLEncInfo -personal -encModePer GINA|where status -ne 'enabled'
 
 ### Show external domains have SMIME as encryption method
 
@@ -90,7 +103,7 @@ Get-SLStatsInfo
 
 ### Get (sending) user-based status info only
 
-Get-SLStatsInfo -type user | Where-Object emailAddress -like 'max@mustermann.com'
+Get-SLStatsInfo -type user | Where-Object emailAddress -like 'internal.user@contoso.de'
 
 ### Get (sending) domain-based status info only
 
