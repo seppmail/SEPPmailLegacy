@@ -12,20 +12,24 @@
 #>
 [CmdLetBinding()]
 param()
-If (($isWindows -ne $true))
-{
-    Write-Error "This module currently works only on PowerShell 7 on the Windows platform, module loading aborted"
-    break
-}
 
 Write-Verbose 'Setting Default variables'
 $global:SLConfig = $null
 $global:SlConfigContent = [ordered]@{}
-Write-Verbose 'Set config path to %localappdata%\SEPPmailLegacy'
-$global:SLConfigPath = Join-Path -Path $env:LocalAppdata -ChildPath 'SEPPmailLegacy'
-$global:SLConfigFilePath = Join-Path -Path $SLConfigPath -ChildPath 'SLConfig.config'
-Write-verbose 'Setting Secrets Management Vault to default BuiltInLocalVault'
-$global:SecretVaultName = 'BuiltInLocalVault'
+
+Write-Verbose 'Set config path to Homedrive\.SEPPmailLegacy'
+If ($iswindows) {
+    $FullHomePath = Join-Path -Path ([Environment]::GetEnvironmentVariable('HOMEDRIVE')) -ChildPath ([Environment]::GetEnvironmentVariable('HOMEPATH'))
+} else {
+    $FullHomePath = $env:Home
+}
+If (!($Fullhomepath)) {
+    Write-Error 'Could not set $fullHomePath to users home directory. Set the variable $FullHomePath manually and try to load the module again'
+    break
+}
+
+$global:SLConfigPath = Join-Path -Path $FullHomepath -ChildPath '.SEPPmailLegacy'
+$global:SLConfigFilePath = Join-Path -Path $SLConfigPath -ChildPath 'SLCurrent.config'
 
 Write-Verbose 'Testing Config Filepath'
 if (!(Test-Path $SLConfigPath))

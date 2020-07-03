@@ -12,10 +12,10 @@
 RootModule = '.\SEPPmailLegacy.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.5.1'
+ModuleVersion = '0.6'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Core','Desktop')
 
 # ID used to uniquely identify this module
 GUID = '48c99d60-40c0-4c5e-a7f0-ab20e13e4db7'
@@ -52,13 +52,7 @@ PowerShellVersion = '7.0'
 
 # Modules that must be imported into the global environment prior to importing this module
 # RequiredModules = @('Configuration','Microsoft.PowerShell.SecretsManagement')
-RequiredModules = @(
-        'Microsoft.PowerShell.SecretManagement',
-        @{
-            ModuleName = 'Microsoft.PowerShell.SecretManagement'
-            ModuleVersion = '0.2.0'
-        }
-    )
+RequiredModules = @()
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
@@ -129,11 +123,16 @@ PrivateData = @{
 110520: Initial release based on API Legacy Version 0.5
 
 020720: Fixing Get-SLConfig findings 0.5.1
+
+040720: Removed SecretsManagement dependency, as mutiplatform doesnt support it - moved to CliXML
+        Changed ConfigPath to HOME/.SEPPmailLegacy
+        Changed Version to 0.6
+
 '@
 
 
         # Prerelease string of this module
-        Prerelease = 'alpha1'
+        Prerelease = 'alpha3'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false

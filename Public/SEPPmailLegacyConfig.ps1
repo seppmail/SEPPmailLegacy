@@ -38,7 +38,7 @@ function Set-SLConfig {
         }
         else {
             Write-Verbose "No FQDN specified, load default config file"
-            $SLConfigFilePath = Join-Path -Path $SLConfigPath -ChildPath 'SLConfig.config'
+            $SLConfigFilePath = Join-Path -Path $SLConfigPath -ChildPath 'SLCurrent.config'
         }
 
         if (!(Test-Path $SLConfigFilePath)) {
@@ -55,14 +55,15 @@ function Set-SLConfig {
         }
 
         Write-Verbose "Testing if $($conf.Secret) exists in secrets store."
-        if (!(Get-Secret $conf.Secret -Vault $SecretVaultName))
+        $SecFilePath = Join-Path -Path $SLConfigPath -ChildPath ("$($Conf.Secret)" + '.xml')
+        if (!(Test-Path -Path $SecFilePath))
         {
-            Write-Warning "$($conf.Secret) is missing in vault $SecretVaultName! Run New-SLConfig to create a proper configuration"
+            Write-Warning "Stored credentials XML file $($conf.Secret) is missing! Run New-SLConfig to create a proper configuration"
             break
         }
         else
         {
-            $secureSecret = Get-Secret $conf.Secret -Vault $conf.secretVaultName
+            $secureSecret = Import-CliXML -Path $SecFilePath
         }
         <#
         Write-Verbose "Writing default-Config File"
@@ -73,7 +74,6 @@ function Set-SLConfig {
         $global:SLConfig = [ordered]@{
             SEPPmailFQDN    = $conf.SEPPmailFQDN
             Secret          = $secureSecret
-            SecretVaultName = $SecretVaultName
             AdminPort       = $conf.Adminport
         }
     }
@@ -149,18 +149,18 @@ function New-SLConfig
     
     process
     {
-        Write-Verbose "Create secret in the secret vault if it does not exists"
-        if (!(Get-SecretInfo $userName -Vault $secretVaultName))
+        $SecFilePath = Join-Path -Path $SLConfigPath -ChildPath ("$UserName" + ".xml")
+        Write-Verbose "Create secret here: $SecFilePath if it does not exists"
+        if (!(Test-Path -Path $SecFilePath))
         {
             Write-Verbose "Secret for username: $userName not found, creating new" 
             [Securestring]$secretPassword = Read-Host -Prompt "Enter Password for the above username" -AsSecureString
-            Set-Secret -Vault $secretVaultName -Name $userName -Secret (New-Object -TypeName PSCredential -ArgumentList ($userName, $secretpassword))
+            New-Object -TypeName PSCredential -ArgumentList ($userName, $secretpassword)|Export-Clixml -Path $SecFilePath
         }
 
         Write-Verbose "Set Parametervalues into temporary config"
         $conf.SEPPmailFQDN = $SEPPmailFQDN
         If ($UserName) { $conf.Secret = $UserName }
-        If ($SecretVaultName) { $conf.SecretVaultName = $SecretVaultName }
         If ($AdminPort) { $conf.AdminPort = $AdminPort }
 
         Write-Verbose "Writing new config to file."
@@ -168,10 +168,10 @@ function New-SLConfig
         $conf | ConvertTo-Json | New-Item -Path $SLConfigFilePath -Force | Out-Null
         
         If ($Notcurrent) {
-            Write-Verbose 'Just created config file, not copying it to SLConfig.config'
+            Write-Verbose 'Just created config file, not copying it to SLCurrent.config'
         }
         else {
-            $CurrentSLConfigFilePath = (Join-Path $SLConfigPath -ChildPath 'SLconfig') + '.config'
+            $CurrentSLConfigFilePath = (Join-Path $SLConfigPath -ChildPath 'SLCurrent') + '.config'
             Copy-Item -Path $SLConfigFilePath -Destination $CurrentSLConfigFilePath |out-null
         }
     }
@@ -282,28 +282,27 @@ function Remove-SLConfig
             Write-Verbose "Read File "
             $FQDNConfigFilePath = (Join-Path $SLConfigPath -ChildPath $SEPPmailFQDN) + ".config"
 
-            Write-Verbose 'Config file found, trying to remove secrets'
-            $secretName = (Get-Content $FQDNConfigFilePath|convertfrom-JSON).secret
-            $secretVaultName = (Get-Content $FQDNConfigFilePath|convertfrom-JSON).secretVaultName
-            If (Get-Secret -Name $secretName -Vault $SecretVaultName)  {
-                Remove-Secret -Name $secretName -Vault $SecretVaultName
+            if ($FQDNConfigFilePath) {
+                Write-Verbose 'Config file found, trying to remove secrets'
+                $SecretName = (Get-Content $FQDNConfigFilePath|convertFrom-JSON).Secret
+                $SecFilePath = Join-Path -Path $SLConfigPath -ChildPath ("$SecretName" + ".xml")
+                If ((Import-CliXML -Path $SecFilePath -ea 0))
+                    {
+                    Remove-Item -Name $SecFilePath -Force
+                    }
+                if (Test-Path $FQDNConfigFilePath) {
+                    Write-Verbose "Removing File $FQDNConfigFilePath"
+                    Remove-Item $FQDNConfigFilePath
+                }
+                else {
+                    Write-Warning "Config File for $SEPPmailFQDN not found"
+                }
             }
-
-            if (Test-Path $FQDNConfigFilePath) {
-                Write-Verbose "Removing File $FQDNConfigFilePath"
-                Remove-Item $FQDNConfigFilePath
-            }
-            else {
-                Write-Warning "Config File for $SEPPmailFQDN not found"
-            }
-            
-
         }
-    catch {
+        catch {
             $_.Exception
         }
     }
-    
     end
     {
     }
@@ -337,12 +336,10 @@ function Find-SLConfig
     begin
     {
         if ($ConfigName) {
-            $Configurations = @(Get-ChildItem -Path $SLConfigPath -Exclude 'SLConfig*'|where-object Name -like $ConfigName)
-#            $Configurations = @(Get-ChildItem -Path $SLConfigPath -Filter "$ConfigName.config")
+            $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config') -Exclude 'SLCurrent*'|where-object Name -like $ConfigName)
         }
         else {
-            $Configurations = @(Get-ChildItem -Path $SLConfigPath -Exclude 'SLConfig*')
-#            $Configurations = @(Get-ChildItem -Path $SLConfigPath -Filter "*.config")
+            $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config'))
         }
     }
     process
