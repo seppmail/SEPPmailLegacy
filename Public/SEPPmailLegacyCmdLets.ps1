@@ -303,21 +303,38 @@ function Get-SLEncInfo
     
     process
     {
-        if ($PSCmdlet.ParameterSetName -eq 'personal') 
-        {
-        
-            $uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', ($encModePer ? '/' + $encModePer.ToUpper():$null), ($eMailAddress ? '?mailAddress=' + $eMailAddress.ToLower():$null), ($rebuild ? '?rebuildList=1':$null)
-            
+        # Works in PS 7 only
+        if ($PSVersionTable.PSVersion.Major -ge 7) {
+            if ($PSCmdlet.ParameterSetName -eq 'personal') 
+            {
+                $uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', ($encModePer ? '/' + $encModePer.ToUpper():$null), ($eMailAddress ? '?mailAddress=' + $eMailAddress.ToLower():$null), ($rebuild ? '?rebuildList=1':$null)
+            }
+            elseif ($PSCmdlet.ParameterSetName -eq 'domain')
+            {
+                $uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', ($encModeDom ? '/' + $encModeDom.ToUpper():$null), ($rebuild ? '?rebuildList=1':$null)
+            }
+            elseif ($PSCmdlet.ParameterSetName -eq 'eMail')
+            {
+                $uri = "{0}{1}/?mailAddress={2}" -f $urlroot, 'encinfo', $eMailAddress
+            }
+        } else {
+            # Powershell 2-6 editions
+            if ($PSCmdlet.ParameterSetName -eq 'personal') 
+            {
+                #$uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', ($encModePer ? '/' + $encModePer.ToUpper():$null), ($eMailAddress ? '?mailAddress=' + $eMailAddress.ToLower():$null), ($rebuild ? '?rebuildList=1':$null)
+                $uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', (if ($encModePer) {"'/' + $encModePer.ToUpper()"} else {$null}), (if ($eMailAddress) {"'?mailAddress=' + $eMailAddress.ToLower()"} else {$null}), (if ($rebuild)  {"'?rebuildList=1'"} else {$null})
+            }
+            elseif ($PSCmdlet.ParameterSetName -eq 'domain')
+            {
+                #$uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', ($encModeDom ? '/' + $encModeDom.ToUpper():$null), ($rebuild ? '?rebuildList=1':$null)
+                $uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', (if ($encModeDom) {"'/' + $encModeDom.ToUpper()"} else {$null}), (if ($rebuild)  {"'?rebuildList=1'"} else {$null})
+            }
+            elseif ($PSCmdlet.ParameterSetName -eq 'eMail')
+            {
+                $uri = "{0}{1}/?mailAddress={2}" -f $urlroot, 'encinfo', $eMailAddress
+            }
         }
-        elseif ($PSCmdlet.ParameterSetName -eq 'domain')
-        {
-            $uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', ($encModeDom ? '/' + $encModeDom.ToUpper():$null), ($rebuild ? '?rebuildList=1':$null)
-        }
-        elseif ($PSCmdlet.ParameterSetName -eq 'eMail')
-        {
-            $uri = "{0}{1}/?mailAddress={2}" -f $urlroot, 'encinfo', $eMailAddress
-        }
-        
+       
         $rawdata = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret
         switch ($PSCmdlet.ParameterSetname) 
         {
