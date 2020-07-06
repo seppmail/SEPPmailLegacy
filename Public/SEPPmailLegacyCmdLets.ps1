@@ -16,7 +16,7 @@ function Get-SLLicenseInfo
     {
         $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
         $uri = $urlroot + 'statistics' + '?' + 'returnType' + '=' + 'CSV'
-        $csvstats = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
+        $csvstats = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
         #'Account last used' Datum länger als 3 Monate her - keine Lizenz
         # wenn 'May not sign mails'-like 'YES' UND 'May not encrypt mails' -like 'YES - keine Lizenz verbraucht == Deaktiviert
 
@@ -88,7 +88,7 @@ function Get-SLGroupInfo
         $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
         $uri = $urlroot + 'groupinfo' + '?' + 'returnType' + '=' + 'CSV'
         Write-Verbose 'Call REST-API'
-        $groupraw = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
+        $groupraw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
         
         Write-Verbose 'Transform output to HT-Array and make sure to have proper values everywhere. '
         # [0] returns object with 2 members 'group name' and 'member names'
@@ -164,7 +164,8 @@ function Get-SLStatsInfo
         if ($type -like 'user') 
         {
             $uri = $uribase + '&statisticsType=user'
-            $userStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
+#            $userStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
+            $userStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
             $userStatsRaw.'accountLastUsed'
             $userArray = @()
             $userArray = $userStatsRaw | ForEach-Object `
@@ -203,7 +204,7 @@ function Get-SLStatsInfo
         if ($type -like 'domain') 
         {
             $uri = $uribase + '&statisticsType=domain'
-            $domStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
+            $domStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
             Write-Verbose "Creating output Hashtables"
             $domArray = @()
             $domArray = $domstatsraw | ForEach-Object `
@@ -303,39 +304,37 @@ function Get-SLEncInfo
     
     process
     {
-        # Works in PS 7 only
-        if ($PSVersionTable.PSVersion.Major -ge 7) {
-            if ($PSCmdlet.ParameterSetName -eq 'personal') 
-            {
-                $uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', ($encModePer ? '/' + $encModePer.ToUpper():$null), ($eMailAddress ? '?mailAddress=' + $eMailAddress.ToLower():$null), ($rebuild ? '?rebuildList=1':$null)
-            }
-            elseif ($PSCmdlet.ParameterSetName -eq 'domain')
-            {
-                $uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', ($encModeDom ? '/' + $encModeDom.ToUpper():$null), ($rebuild ? '?rebuildList=1':$null)
-            }
-            elseif ($PSCmdlet.ParameterSetName -eq 'eMail')
-            {
-                $uri = "{0}{1}/?mailAddress={2}" -f $urlroot, 'encinfo', $eMailAddress
-            }
-        } else {
-            # Powershell 2-6 editions
-            if ($PSCmdlet.ParameterSetName -eq 'personal') 
-            {
-                #$uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', ($encModePer ? '/' + $encModePer.ToUpper():$null), ($eMailAddress ? '?mailAddress=' + $eMailAddress.ToLower():$null), ($rebuild ? '?rebuildList=1':$null)
-                $uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', (if ($encModePer) {"'/' + $encModePer.ToUpper()"} else {$null}), (if ($eMailAddress) {"'?mailAddress=' + $eMailAddress.ToLower()"} else {$null}), (if ($rebuild)  {"'?rebuildList=1'"} else {$null})
-            }
-            elseif ($PSCmdlet.ParameterSetName -eq 'domain')
-            {
-                #$uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', ($encModeDom ? '/' + $encModeDom.ToUpper():$null), ($rebuild ? '?rebuildList=1':$null)
-                $uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', (if ($encModeDom) {"'/' + $encModeDom.ToUpper()"} else {$null}), (if ($rebuild)  {"'?rebuildList=1'"} else {$null})
-            }
-            elseif ($PSCmdlet.ParameterSetName -eq 'eMail')
-            {
-                $uri = "{0}{1}/?mailAddress={2}" -f $urlroot, 'encinfo', $eMailAddress
-            }
+        # Powershell 2-6 editions
+        if ($PSCmdlet.ParameterSetName -eq 'personal') 
+        {
+            #$uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', ($encModePer ? '/' + $encModePer.ToUpper():$null), ($eMailAddress ? '?mailAddress=' + $eMailAddress.ToLower():$null), ($rebuild ? '?rebuildList=1':$null)
+            
+            write-verbose 'Constructing personal parameterset'
+            $encModePerParam   = if ($encModePer) {'/' + "$($encModePer.ToUpper())"} else {$null}
+            $eMailParam     = if ($eMailAddress) {'?mailAddress=' + "$($eMailAddress.ToLower())"} else {$null}
+            $rebuildParam   = if ($rebuild) {'?rebuildList=1'} else {$null}
+            
+            Write-Verbose "passing encModeParam: $EncModePerParam, eMailParam: $eMailParam, rebuildParam: $rebuildParam"
+            $uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', $encModeParam, $eMailParam, $rebuildParam
+            Write-Verbose "Final URI: $URI"
         }
-       
-        $rawdata = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret
+        elseif ($PSCmdlet.ParameterSetName -eq 'domain')
+        {
+            #$uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', ($encModeDom ? '/' + $encModeDom.ToUpper():$null), ($rebuild ? '?rebuildList=1':$null)
+            
+            write-verbose 'Constructing domain parameterset'
+            $encModeDomParam   = if ($encModeDom) {'/' + "$($encModeDom.ToUpper())"} else {$null}
+            $rebuildParam   = if ($rebuild) {'?rebuildList=1'} else {$null}            
+            
+            Write-Verbose "passing encModeParam: $EncModeParam, eMailParam: $eMailParam, rebuildParam: $rebuildParam"
+            $uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', $encModeDomParam, $rebuildParam
+            Write-Verbose "Final URI: $URI"
+        }
+        elseif ($PSCmdlet.ParameterSetName -eq 'eMail')
+        {
+            $uri = "{0}{1}/?mailAddress={2}" -f $urlroot, 'encinfo', $eMailAddress
+        }
+        $rawdata = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret
         switch ($PSCmdlet.ParameterSetname) 
         {
             personal
@@ -379,7 +378,7 @@ function Get-SLEncInfo
 
 function New-SLGINAUser
 {
-    [CmdletBinding('SupportsShouldProcess')]
+    [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true,
             ValueFromPipelineByPropertyName = $true)]
@@ -423,13 +422,13 @@ function New-SLGINAUser
         $invokeParam = @{
             Uri            = $uri 
             Method         = 'POST '
-            Authentication = 'Basic'
             Credential     = $SLConfig.secret
             ContentType    = "application/json"
             body           = $userData
         }
-        $NewGinaUser = Invoke-RestMethod @invokeParam
-        return $newGinaUser.message
+        
+            $NewGinaUser = Invoke-RestMethod @invokeParam
+            return $newGinaUser.message
     }
     
     end

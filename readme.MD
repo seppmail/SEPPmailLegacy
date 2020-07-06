@@ -1,12 +1,16 @@
 # SEPPmail Legacy API Powershell Module
 
-Beginning from SEPPmail Appliance Version 11.1.7, SEPPmail supports a Legacy-API to retrieve statistics and encryption via REST, including the option to mass-generate GINA-Users. This PowerSHell module is a wrapper around this API to allow more convenient operation and interaction from the command line.
+Beginning from SEPPmail Appliance Version 11.1.7, SEPPmail supports a Legacy-API to retrieve statistics and encryption information via REST, including the option to mass-generate GINA-Users. This PowerSHell module is a wrapper around this API to allow more convenient operation and interaction from the command line.
 
 ## Prerequisites
 
-The module requires SEPPmail minimum version 11.1.7, Powershell 7.0 and the Microsoft.PowerShell.SecretManagement module version 0.2.0 minimum installed. Even that the Secret Management Module is in early alpha today it provides great support for storing credentials. For installation use "Install-Module Microsoft.PowerShell.SecretManagement -AllowPreRelease -Scope CurrentUser"
+The module requires minimum SEPPmail version 11.1.7 and Powershell 5.1"
 
 On the SEPPmail Appliance, you need to have a user configured in the reporting group as documented in the Legacy-API to access the API via REST.
+
+## PowerShell Multi-Edition Support
+
+
 
 ## Installation
 

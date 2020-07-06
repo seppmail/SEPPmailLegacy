@@ -33,7 +33,7 @@ Copyright = '(c) SEPPmail AG. All rights reserved.'
 # Description = ''
 
 # Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '7.0'
+PowerShellVersion = '5.1'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
@@ -128,11 +128,12 @@ PrivateData = @{
         Changed ConfigPath to HOME/.SEPPmailLegacy
         Changed Version to 0.6
 
+060720: 0.7 Test-Version for OS and Version independency
 '@
 
 
         # Prerelease string of this module
-        Prerelease = 'alpha3'
+        Prerelease = 'alpha4'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false
