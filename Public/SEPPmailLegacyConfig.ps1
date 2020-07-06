@@ -196,23 +196,40 @@ function Test-SLConfig
     {
         try
         {
-            if (!((Resolve-DnsName -Name $conf.SEPPmailFQDN -ErrorAction 0).IPAddress))
-            {
-                Write-Error "Could not resolve SEPPmailFQDN, please check DNS and FQDN Name!"
+            if ($IsWindows) {
+                if (!((Resolve-DnsName -Name $conf.SEPPmailFQDN -ErrorAction 0).IPAddress))
+                {
+                    Write-Error "Could not resolve SEPPmailFQDN, please check DNS and FQDN Name!"
+                }
+                else
+                {
+                    Write-Host "DNS query to $($conf.SEPPmailFQDN) worked." -ForegroundColor Green
+                }
             }
-            else
-            {
-                Write-Host "DNS query to $($conf.SEPPmailFQDN) worked." -ForegroundColor Green
-            }
+
             #((Test-Netconnection -ComputerName $conf.SEPPmailFQDN -Port $conf.AdminPort).TcpTestSucceeded)
-            if (!((Test-NetConnection -ComputerName $conf.SEPPmailFQDN -Port $conf.AdminPort -WarningAction SilentlyContinue).TcpTestSucceeded))
-            {
-                Write-Error "Could not connect to port $conf.AdminPort! Check Firewalls and Port configuration." 
+            if ($IsWindows) {
+                if (!((Test-NetConnection -ComputerName $conf.SEPPmailFQDN -Port $conf.AdminPort -WarningAction SilentlyContinue).TcpTestSucceeded))
+                {
+                    Write-Error "Could not connect to port $conf.AdminPort! Check Firewalls and Port configuration." 
+                }
+                else
+                {
+                    Write-Host "TCP Connect to $($conf.SEPPmailFQDN) on Port $($conf.AdminPort) worked." -ForegroundColor Green
+                }
+            } else {
+                if (!(Test-Connection -ComputerName $conf.SEPPmailFQDN -TcpPort $conf.AdminPort -WarningAction SilentlyContinue -quiet))
+                {
+                    Write-Error "Could not connect to port $conf.AdminPort! Check Firewalls and Port configuration." 
+                }
+                else
+                {
+                    Write-Host "TCP Connect to $($conf.SEPPmailFQDN) on Port $($conf.AdminPort) worked." -ForegroundColor Green
+                }
             }
-            else
-            {
-                Write-Host "TCP Connect to $($conf.SEPPmailFQDN) on Port $($conf.AdminPort) worked." -ForegroundColor Green
-            }
+
+
+            
             # Try login at SEPPmail and receive group INfo
 
             $urlroot = New-SLUrlRoot -FQDN $conf.SEPPmailFQDN -adminPort $conf.adminPort
@@ -229,7 +246,6 @@ function Test-SLConfig
                 Write-Error "Most likely an access error"
                 Write-Error "Check group membership of Legacy API group, username and password, details below"
                 $_
-                
             }
         }
         catch
@@ -288,11 +304,12 @@ function Remove-SLConfig
                 $SecFilePath = Join-Path -Path $SLConfigPath -ChildPath ("$SecretName" + ".xml")
                 If ((Import-CliXML -Path $SecFilePath -ea 0))
                     {
-                    Remove-Item -Name $SecFilePath -Force
+                    Write-Verbose "Removing Credentials file $SecFilePath"
+                    Remove-Item -Path $SecFilePath -Force
                     }
                 if (Test-Path $FQDNConfigFilePath) {
                     Write-Verbose "Removing File $FQDNConfigFilePath"
-                    Remove-Item $FQDNConfigFilePath
+                    Remove-Item -Path $FQDNConfigFilePath -Force
                 }
                 else {
                     Write-Warning "Config File for $SEPPmailFQDN not found"
@@ -336,15 +353,19 @@ function Find-SLConfig
     begin
     {
         if ($ConfigName) {
+            Write-Verbose 'Storing names $Configurations array'
             $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config') -Exclude 'SLCurrent*'|where-object Name -like $ConfigName)
         }
         else {
+            Write-Verbose 'Storing $Configurations array of all configuration files'
             $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config'))
         }
     }
     process
     {
+        Write-Verbose 'Looping through $configurations array'
         foreach ($conf in $Configurations) {
+            Write-Verbose 'Emit Configuration'
             Get-Content $conf |ConvertFrom-JSON
         }
     }
