@@ -10,7 +10,7 @@ On the SEPPmail Appliance, you need to have a user configured in the reporting g
 
 ## PowerShell Multi-Edition Support
 
-
+The module supports both PowerShell Core and Desktop editions. It has been tested with PS 5.1 (Windows) and PS 7.0.2 (MacOS and Ubuntu)
 
 ## Installation
 
@@ -19,15 +19,19 @@ git clone https://github.com/SEPPmail/SeppmailLegacy
 
 If you dont have git installed, download the files from the repository, unblock the zip file (PS CmdLet Unblock-File) and place it in the modules folder.
 
+IMPORTANT: Its imperative, that the Module is installed in a folder which is included in the $env:PSModulePath, otherwise it will not work.
+
 ## Loading and initial configuration of the module
 
 Be sure the module is accessible with "Get-Module SEPPmailLegacy -Listavailable" and load it into memory with "Import-Module SEPPmailLegacy".
-During the first import, the module checks if there is a configuration file named SLConfig.config in %LocalAppdata%\SEPPmailLegacy, which is not by default. Use "New-SLConfig" to create one.
+During the first import, the module checks if there is a configuration file named SLCurrent.config in $HOME\.SEPPMailLegacy, which does not exist by default. Use "New-SLConfig" to create one.
 
-### Using a secret from the secrets management module
+### Storing secrets
+
+To avoid entering your legacy-api-user-credentials every time you make a request, or storing it in a script, the we stopre credentials in an encrypted XML file in the config folder. Remember that the XML files only work with the account they have been created.
 
 The module Microsoft.PowerShell.SecretManagement allows it to store credentials (or other secret information) in a locally secure place. The Module uses this store to create credentials automatically when creating a new SLConfig.
 
 ## Using the module
 
-Please find a general overview of the functionality of the module. More info can be found in the module example folder \Examples.
+Usage examples can be found in the module example folder \Examples.

@@ -436,3 +436,102 @@ function New-SLGINAUser
         
     }
 }
+
+function Set-SLGINAUser
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true,
+            ValueFromPipelineByPropertyName = $true)]
+        [Alias("email")]
+        [string]$eMailAddress,
+
+        [Parameter(Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true)]
+        [Alias("user")]
+        [string]$userName,
+
+        [Parameter(Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true)]
+        [string]$customer,
+
+        [Parameter(Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true)]
+        [ValidateSet('e','d')]
+        [string]$language = 'd',
+
+        [Parameter(Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true)]
+        [ValidatePattern('^([+](\d{1,3})\s?)?((\(\d{3,5}\)|\d{3,5})(\s)?)\d{3,8}$')]
+        [string]$mobile,
+
+        [Parameter(Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true)]
+        [string]$password,
+
+        [Parameter(Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true)]
+        # [ValidatePattern('0','1')]
+        [string]$zip_attachment,
+
+        [Parameter(Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true)]
+        [string]$question,
+
+        [Parameter(Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true)]
+        [string]$answer,
+
+        [Parameter(Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true)]
+        [string]$creator,
+
+        [Parameter(Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true)]
+        # [ValidatePattern('0','1')]
+        [string]$expired
+    )
+    
+    begin
+    {
+        Set-SLConfig |out-null
+    }
+    
+    process
+    {
+
+        $urlRoot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
+        $uri = $urlRoot + 'modifyginauser'
+        $userData = [ordered]@{
+            email          = $eMailAddress
+            name           = $userName
+            customer       = $customer
+            language       = $language
+            password       = $password
+            mobile         = $mobile
+            zip_attachment = $zip_attachment
+            question       = $question
+            answer         = $answer
+            creator        = $creator
+            expired        = $expired
+        } | ConvertTo-Json
+        
+        $invokeParam = @{
+            Uri            = $uri 
+            Method         = 'POST '
+            Credential     = $SLConfig.secret
+            ContentType    = "application/json"
+            body           = $userData
+        }
+            Write-Verbose "Modifying User $EMailAddress using URL $uri"
+            $SetGinaUser = Invoke-RestMethod @invokeParam
+            Write-Verbose "Error Code $($SetGinaUser.Errorcode)"
+            Write-Verbose "Error Code $($SetGinaUser.ErrorMessage)"
+            return $SetGinaUser.message
+    }
+    
+    end
+    {
+        
+    }
+}

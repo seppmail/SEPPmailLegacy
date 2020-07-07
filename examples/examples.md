@@ -119,3 +119,7 @@ Try or modify the CSV from the examples folder and use the command below.
 
 Import-Csv .\examples\Ginaimport.csv|New-SLGINAUser
 
+## Change a GINA Users properties
+
+Set-SLGINAUser -eMailAddress 'alice.miller@contoso.com' -answer 'Red'
+

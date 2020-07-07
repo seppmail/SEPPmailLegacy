@@ -12,7 +12,7 @@
 RootModule = '.\SEPPmailLegacy.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.6'
+ModuleVersion = '0.7'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core','Desktop')
@@ -82,7 +82,8 @@ CmdletsToExport = @(
     'Get-SLLicenseInfo'
     'Get-SLGroupInfo'
     'Get-SLStatsInfo'
-    'New-SLGinaUser'
+    'New-SLGINAUser'
+    'Set-SLGINAUser'
     )
 
 # Variables to export from this module
@@ -128,12 +129,13 @@ PrivateData = @{
         Changed ConfigPath to HOME/.SEPPmailLegacy
         Changed Version to 0.6
 
-060720: 0.7 Test-Version for OS and Version independency
+070720: 0.7 Test-Version for OS and version independency
+        Added Set-GINAUser CmdLet
 '@
 
 
         # Prerelease string of this module
-        Prerelease = 'alpha4'
+        Prerelease = 'beta1'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false
