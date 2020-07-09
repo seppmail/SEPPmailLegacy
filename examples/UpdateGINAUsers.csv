@@ -1,0 +1,4 @@
+"userName","eMailAddress","mobile",question,answer,creator,customer,language,password,zip_attachment,expired
+"Alice Miller","alice.miller@contoso.com","+49543876321",,,useradmin,,e,Abc123,0,1
+"Bob Brown","bob.brown@contoso.com","+41543876321",Born in ?,Vienna,useradmin2,,e,Cde456,1,0
+"Charly White","charly.white@contoso.com","+43987654328",,,useradmin3,,d,fgh481$,1,0

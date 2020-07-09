@@ -73,18 +73,18 @@ ScriptsToProcess = @('ModuleInit.ps1')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @(
-    'Get-SLEncInfo'
-    'New-SLConfig'
-    'Set-SLConfig'
-    'Test-SLConfig'
-    'Remove-SLConfig'
-    'Find-SLConfig'
-    'Get-SLLicenseInfo'
-    'Get-SLGroupInfo'
-    'Get-SLStatsInfo'
-    'New-SLGINAUser'
-    'Set-SLGINAUser'
-    )
+        'New-SLConfig'
+        'Set-SLConfig'
+        'Test-SLConfig'
+        'Remove-SLConfig'
+        'Find-SLConfig'
+        'Get-SLLicenseInfo'
+        'Get-SLEncInfo'
+        'Get-SLGroupInfo'
+        'Get-SLStatsInfo'
+        'New-SLGINAUser'
+        'Set-SLGINAUser'
+        )
 
 # Variables to export from this module
 VariablesToExport = '*'
@@ -135,10 +135,11 @@ PrivateData = @{
 090720: 0.7.5 Updated Readme.md and examples.md
         Extended CSV file for Set-SLGinaUser
         Added parameter help
+        Added error handling for GINA CmdLets
 '@
 
         # Prerelease string of this module
-        Prerelease = 'beta1'
+        Prerelease = 'beta2'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false

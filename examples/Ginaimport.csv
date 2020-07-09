@@ -1,4 +1,0 @@
-"userName","eMailAddress","onetimepw","mobile",question,answer,creator,customer,language,password,zip_attachment,expired
-"Alice Miller","alice.miller@contoso.com","Al!c3","+49543876321","","",useradmin,"",e,Abc123,0,1
-"Bob Brown","bob.brown@contoso.com","B0b123","+41543876321","","",useradmin2,"",e,Cde456,1,0
-"Charly White","charly.white@contoso.com","543(cw","+43987654328","","",useradmin3,"",d,"",1,0

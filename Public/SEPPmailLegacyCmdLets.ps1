@@ -405,114 +405,32 @@ function New-SLGINAUser
         [Parameter(
             Mandatory                       = $true,
             ValueFromPipelineByPropertyName = $true,
-            HelpMessage                     = 'GINA user full name'
-        )]
-        [Alias("user")]
-        [string]$userName,
-
-        [Parameter(
-            Mandatory                       = $true,
-            ValueFromPipelineByPropertyName = $true,
             HelpMessage                     = 'GINA user eMail address'
             )]
         [ValidatePattern('([a-z0-9][-a-z0-9_\+\.]*[a-z0-9])@([a-z0-9][-a-z0-9\.]*[a-z0-9]\.(arpa|root|aero|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|de|dj|dk|dm|do|dz|ec|ee|eg|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|um|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|yu|za|zm|zw)|([0-9]{1,3}\.{3}[0-9]{1,3}))')]
-        [Alias("email")]
+        [Alias('email')]
         [string]$eMailAddress,
 
         [Parameter(
             Mandatory                       = $true,
-            ValueFromPipelineByPropertyName = $true,
-            HelpMessage                     = 'One time password'
-            )]
-        [Alias("otp")]
-        [string]$oneTimePw,
-
-        [Parameter(
-            Mandatory                       = $true,
-            ValueFromPipelineByPropertyName = $true,
-            HelpMessage                     = 'GINA user mobile number including country code'
-            )]
-        [ValidatePattern('^([+](\d{1,3})\s?)?((\(\d{3,5}\)|\d{3,5})(\s)?)\d{3,8}$')]
-        [string]$mobile
-    )
-    begin
-    {
-        try {
-            Set-SLConfig | Out-Null
-        }
-        catch {
-            Write-error "Could not load configuration with set-SLConfig"
-        }    }
-    process
-    {
-
-        $urlRoot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
-        $uri = $urlRoot + 'newginauser'
-        $userData = [ordered]@{
-            email    = $eMailAddress
-            name     = $userName
-            password = $oneTimePw
-            mobile   = $mobile 
-        } | ConvertTo-Json
-        
-        $invokeParam = @{
-            Uri         = $uri 
-            Method      = 'POST '
-            Credential  = $SLConfig.secret
-            ContentType = "application/json"
-            body        = $userData
-        }
-        
-        $NewGinaUser = Invoke-RestMethod @invokeParam
-        return $newGinaUser.message
-    }
-    
-    end
-    {
-        
-    }
-}
-
-function Set-SLGINAUser
-{
-    [CmdletBinding()]
-    param (
-        [Parameter(
-            Mandatory                       = $true,
-            ValueFromPipelineByPropertyName = $true,
-            HelpMessage                     = 'GINA user eMail adress'
-            )]
-        [ValidatePattern('([a-z0-9][-a-z0-9_\+\.]*[a-z0-9])@([a-z0-9][-a-z0-9\.]*[a-z0-9]\.(arpa|root|aero|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|de|dj|dk|dm|do|dz|ec|ee|eg|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|um|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|yu|za|zm|zw)|([0-9]{1,3}\.{3}[0-9]{1,3}))')]
-        [Alias("email")]
-        [string]$eMailAddress,
-
-        [Parameter(
-            Mandatory                       = $false,
             ValueFromPipelineByPropertyName = $true,
             HelpMessage                     = 'GINA user full name'
-            )]
-        [Alias("user")]
+        )]
+        [Alias('user')]
         [string]$userName,
 
         [Parameter(
-            Mandatory                       = $false,
+            Mandatory                       = $true,
             ValueFromPipelineByPropertyName = $true,
-            HelpMessage                     = 'For MSP´s and multi-customer environments, set the GINA users customer'
+            HelpMessage                     = 'GINA user password as string'
             )]
-        [string]$customer,
+        [Alias('password')]
+        [string]$Pwd,
 
         [Parameter(
             Mandatory                       = $false,
             ValueFromPipelineByPropertyName = $true,
-            HelpMessage                     = 'GINA user language setting e or d'
-            )]
-        [ValidateSet('e', 'd')]
-        [string]$language = 'd',
-
-        [Parameter(
-            Mandatory                       = $false,
-            ValueFromPipelineByPropertyName = $true,
-            HelpMessage                     = 'GINA user mobile number including country code, i.e. +4911122233344'
+            HelpMessage                     = 'GINA user mobile number including country code'
             )]
         [ValidatePattern('^([+](\d{1,3})\s?)?((\(\d{3,5}\)|\d{3,5})(\s)?)\d{3,8}$')]
         [string]$mobile,
@@ -520,17 +438,10 @@ function Set-SLGINAUser
         [Parameter(
             Mandatory                       = $false,
             ValueFromPipelineByPropertyName = $true,
-            HelpMessage                     = 'GINA user password'
-            )]
-        [string]$password,
-
-        [Parameter(
-            Mandatory                       = $false,
-            ValueFromPipelineByPropertyName = $true,
-            HelpMessage                     = 'GINA user setting ZIP attachment setting'
+            HelpMessage                     = "GINA user `'expired`' setting 0 or 1"
             )]
         [ValidateSet('0','1')]
-        [string]$zip_attachment,
+        [string]$expired = '0',
 
         [Parameter(
             Mandatory                       = $false,
@@ -549,17 +460,146 @@ function Set-SLGINAUser
         [Parameter(
             Mandatory                       = $false,
             ValueFromPipelineByPropertyName = $true,
-            HelpMessage                     = 'GINA user created by information'
+            HelpMessage                     = 'For MSP´s and multi-customer environments, set the GINA users customer'
             )]
-        [string]$creator,
+        [string]$customer
+    )
+    begin
+    {
+        try {
+            Set-SLConfig | Out-Null
+        }
+        catch {
+            Write-error "Could not load configuration with set-SLConfig"
+            Write-Error "$error"
+        }
+    }
+    process
+    {
+        $urlRoot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
+        $uri = $urlRoot + 'newginauser'
+        $userData = [ordered]@{
+            email    = $eMailAddress
+            password = $pwd
+            name     = $userName
+            mobile   = $mobile
+            expired  = $expired
+            question = $question
+            answer   = $answer
+            customer = $customer
+        } | ConvertTo-Json
+        
+        $invokeParam = @{
+            Uri         = $uri 
+            Method      = 'POST '
+            Credential  = $SLConfig.secret
+            ContentType = "application/json"
+            body        = $userData
+        }
+        Write-Verbose "Creating new GINA User $userName with E-mailAdress $eMailAddress"
+        $NewGinaUser = Invoke-RestMethod @invokeParam
+        Write-Verbose "ErrorCode $($NewGinaUser.ErrorCode)"
+        if (!($($NewGinaUser.errorCode))) {
+            return $NewGinaUser.message
+        }
+        else {
+            Write-Error "SEPPmail returned Error $($newGinaUser.errorCode): $($NewGinaUser.ErrorMessage)"
+        }
+    }
+    end
+    {
+        
+    }
+}
+
+function Set-SLGINAUser
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(
+            Mandatory                       = $true,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user eMail adress'
+            )]
+        [ValidatePattern('([a-z0-9][-a-z0-9_\+\.]*[a-z0-9])@([a-z0-9][-a-z0-9\.]*[a-z0-9]\.(arpa|root|aero|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|de|dj|dk|dm|do|dz|ec|ee|eg|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|um|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|yu|za|zm|zw)|([0-9]{1,3}\.{3}[0-9]{1,3}))')]
+        [Alias('email')]
+        [string]$eMailAddress,
 
         [Parameter(
             Mandatory                       = $false,
             ValueFromPipelineByPropertyName = $true,
-            HelpMessage                     = 'GINA user expired setting 0 or 1'
+            HelpMessage                     = 'GINA user full name'
+            )]
+        [Alias('user')]
+        [string]$userName,
+
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user password as string'
+            )]
+        [Alias('password')]
+        [string]$pwd,
+        
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user mobile number including country code, i.e. +4911122233344'
+            )]
+        [ValidatePattern('^([+](\d{1,3})\s?)?((\(\d{3,5}\)|\d{3,5})(\s)?)\d{3,8}$')]    
+        [string]$mobile,
+
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = "GINA user `'language`' setting e or d"
+            )]
+        [ValidateSet('e','d')]    
+        [string]$language = 'd',
+
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = "GINA user `'expired`' setting 0 or 1"
             )]
         [ValidateSet('0','1')]
-        [string]$expired
+        [string]$expired,
+
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user passwort reset question'
+            )]
+        [string]$question,
+
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user passwort reset answer'
+            )]
+        [string]$answer,
+
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'For MSP´s and multi-customer environments, set the GINA users customer'
+            )]
+        [string]$customer,            
+
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = "GINA user `'ZIP attachment`' setting"
+            )]
+        [ValidateSet('0','1')]    
+        [string]$zip_attachment,
+
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = "GINA user `'created by`' information"
+            )]
+        [string]$creator
     )
     
     begin
@@ -568,7 +608,8 @@ function Set-SLGINAUser
             Set-SLConfig | Out-Null
         }
         catch {
-            Write-error "Could not load configuration with set-SLCOnfig"
+            Write-error "Could not load configuration with Set-SLConfig"
+            Write-Error "$error"
         }
     }
     
@@ -598,14 +639,14 @@ function Set-SLGINAUser
                 ContentType = "application/json"
                 body        = $userData
             }
-            Write-Verbose "Modifying User $EMailAddress using URL $uri"
+            Write-Verbose "Modifying GINA User $EMailAddress using URL $uri"
             $SetGinaUser = Invoke-RestMethod @invokeParam
-            if ($($SetGinaUser.Errorcode) -eq '0') {
+            Write-Verbose "ErrorCode $($SetGinaUser.ErrorCode)"
+            if (!($($SETGinaUser.errorCode))) {
                 return $SetGinaUser.message
             }
             else {
-                $errormessage = Convert-SLRestError -interror $SetGinaUser.Errorcode
-                Write-Error "SEPPmail returned Error $ErrorMessage"
+                Write-Error "SEPPmail returned Error $($SetGinaUser.errorCode): $($SetGinaUser.ErrorMessage)"
             }
         }
         catch {

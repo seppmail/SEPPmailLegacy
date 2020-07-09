@@ -128,9 +128,14 @@ To create a new GINA user use the CmdLet as below.
 You could also create a CSV-File with values for the users properties and pipe them into the command. (Very useful for mass-imports.)
 Try or modify the CSV from the examples folder and use the command below.
 
-`Import-Csv .\examples\Ginaimport.csv|New-SLGINAUser`
+`Import-Csv .\examples\NewGINAUsers.csv|New-SLGINAUser`
 
 #### Change a GINA Users properties
 
 To modify and add additional properties use Set-GINAUser. This CmdLet is also pipeline-aware.
+So either change single properties from the commandline:
 `Set-SLGINAUser -eMailAddress 'alice.miller@contoso.com' -answer 'Red'`
+
+Or pipe the data into the CmdLet.
+
+`Import-Csv .\examples\UpdateGINAUsers.csv|Set-SLGINAUser`

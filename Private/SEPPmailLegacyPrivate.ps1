@@ -43,21 +43,19 @@ function Convert-SLRestError {
             )]
         [string]$interror
     )
-    
     begin {
     }
-    
     process {
-        switch (${interror}) {
-            {$_ -eq '-2'} {'unknown command'}
-            {$_ -eq '-3'} {'unknown category'}
-            {$_ -eq '-4'} {'invalid HTTP Method'}
+        switch ($interror) {
+            {$_ -eq '-2'} {'Unknown command'}
+            {$_ -eq '-3'} {'Unknown category'}
+            {$_ -eq '-4'} {'Invalid HTTP Method'}
             {$_ -eq '-5'} {'POST-Data error'}
             {$_ -eq '-6'} {'Error when parsing JSON POST-data'}
             {$_ -eq '-8'} {'Error while reading/writing database'}
-            {$_ -eq '-9'} {'unknown error'}
-            {$_ -eq '-11'} {'invalid REST-Path'}
-            {$_ -eq '-12'} {'invalid parameter in REST-Path'}
+            {$_ -eq '-9'} {'Unknown error'}
+            {$_ -eq '-11'} {'Invalid REST-Path'}
+            {$_ -eq '-12'} {'Invalid parameter in REST-Path'}
         }
     }
     end {
