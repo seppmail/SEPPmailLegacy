@@ -30,6 +30,9 @@ if (!(Test-Path $SLConfigFilePath))
 {
     Write-Warning "No configuration file in default configuration path $SLConfigPath found."
     Write-Warning "Run New-SLConfig, otherwise the module will not work."
+} else {
+    "Using Configuration from default config path $SLconfigFilePath"
+    Get-content $SLConfigFilePath|convertfrom-JSON
 }
 
 
