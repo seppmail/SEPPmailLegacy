@@ -3,13 +3,16 @@ function Get-SLLicenseInfo
     [CmdletBinding()]
     param (
     
-        [Parameter(Mandatory = $false)]
+        [Parameter(
+            Mandatory = $false,
+            HelpMessage = 'Receive a table with license summary info instead of single entries for each user'
+        )]
         [switch]$summary
     )
     
     begin
     {
-        Set-SLConfig |out-null
+        Set-SLConfig | Out-Null
     }
     
     process
@@ -69,10 +72,16 @@ function Get-SLGroupInfo
     [CmdletBinding()]
     param (
     
-        [Parameter(Mandatory = $false)]
+        [Parameter(
+            Mandatory = $false,
+            HelpMessage = 'Username to look for group membership'
+        )]
         [string]$MemberName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(
+            Mandatory = $false,
+            HelpMessage = 'Groupname to look for user membership'
+        )]
         [string]$GroupName
 
     )
@@ -80,7 +89,7 @@ function Get-SLGroupInfo
     begin
     {
         #Write-Verbose 'Writing SLConfig to $global:SLConfig'
-        Set-SLConfig |out-null
+        Set-SLConfig | Out-Null
     }
 
     process
@@ -130,23 +139,28 @@ function Get-SLGroupInfo
     }
 }
 
-
 function Get-SLStatsInfo
 {
     [CmdletBinding()]
     param(
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(
+            Mandatory = $false,
+            HelpMessage = 'Get user or domain statistics'
+        )]
         [ValidateSet('user', 'domain')]
         [string]$type = 'user',
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(
+            Mandatory = $false,
+            HelpMessage = 'Rebuild cached stats info database'
+        )]
         [switch]$rebuild = $false
     )
 
     begin
     {
-        Set-SLConfig |out-null |out-null
+        Set-SLConfig | Out-Null | Out-Null
     }
 
     process 
@@ -164,7 +178,6 @@ function Get-SLStatsInfo
         if ($type -like 'user') 
         {
             $uri = $uribase + '&statisticsType=user'
-#            $userStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
             $userStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
             $userStatsRaw.'accountLastUsed'
             $userArray = @()
@@ -240,13 +253,15 @@ function Get-SLEncInfo
         # Param block personal
         [Parameter(
             ParameterSetName = 'personal',
-            Mandatory = $true
+            Mandatory = $true,
+            HelpMessage = 'Restrict to smtp-address-based encryption info'
         )]
         [switch]$personal,
         
         [Parameter(
             ParameterSetName = 'personal',
-            Mandatory = $true
+            Mandatory = $true,
+            HelpMessage = 'Filter output to a specific encryption method'
         )]
         [ValidateSet('SMIME', 'PGP', 'GINA')]
         [Alias('encp')]
@@ -255,13 +270,15 @@ function Get-SLEncInfo
         # Param block domain
         [Parameter(
             ParameterSetName = 'domain',
-            Mandatory = $true
+            Mandatory = $true,
+            HelpMessage = 'Restrict to eMail-domain-based encryption info'
         )]
         [switch]$domain,
             
         [Parameter(
             ParameterSetName = 'domain',
-            Mandatory = $true
+            Mandatory = $true,
+            HelpMessage = 'Filter output to a specific encryption method'
         )]
         [ValidateSet('SMIME', 'PGP', 'HIN', 'TLS')]
         [Alias('encd')]
@@ -270,11 +287,13 @@ function Get-SLEncInfo
         # param Block used in 'eMail' and multiple paramsets
         [Parameter(
             ParameterSetName = 'personal',
-            Mandatory = $false
+            Mandatory = $false,
+            HelpMessage = 'Define a specific eMail adress'
         )]
         [Parameter(
             ParameterSetName = 'eMail',
-            Mandatory = $true
+            Mandatory = $true,
+            HelpMessage = 'Define a specific eMail adress'
         )]
         [ValidatePattern('([a-z0-9][-a-z0-9_\+\.]*[a-z0-9])@([a-z0-9][-a-z0-9\.]*[a-z0-9]\.(arpa|root|aero|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|de|dj|dk|dm|do|dz|ec|ee|eg|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|um|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|yu|za|zm|zw)|([0-9]{1,3}\.{3}[0-9]{1,3}))')]
         [Alias('eMail')]
@@ -282,15 +301,18 @@ function Get-SLEncInfo
 
         [Parameter(
             ParameterSetName = 'personal',
-            Mandatory = $false
+            Mandatory = $false,
+            HelpMessage = 'Rebuild cached encryption info database'
         )]
         [Parameter(
             ParameterSetName = 'domain',
-            Mandatory = $false
+            Mandatory = $false,
+            HelpMessage = 'Rebuild cached encryption info database'
         )]
         [Parameter(
             ParameterSetName = 'eMail',
-            Mandatory = $false
+            Mandatory = $false,
+            HelpMessage = 'Rebuild cached encryption info database'
         )]
         [switch]$rebuild = $false
 
@@ -298,7 +320,7 @@ function Get-SLEncInfo
     
     begin
     {
-        Set-SLConfig |out-null
+        Set-SLConfig | Out-Null
         $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
     }
     
@@ -309,10 +331,10 @@ function Get-SLEncInfo
         {
             #$uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', ($encModePer ? '/' + $encModePer.ToUpper():$null), ($eMailAddress ? '?mailAddress=' + $eMailAddress.ToLower():$null), ($rebuild ? '?rebuildList=1':$null)
             
-            write-verbose 'Constructing personal parameterset'
-            $encModePerParam   = if ($encModePer) {'/' + "$($encModePer.ToUpper())"} else {$null}
-            $eMailParam     = if ($eMailAddress) {'?mailAddress=' + "$($eMailAddress.ToLower())"} else {$null}
-            $rebuildParam   = if ($rebuild) {'?rebuildList=1'} else {$null}
+            Write-Verbose 'Constructing personal parameterset'
+            $encModePerParam = if ($encModePer) { '/' + "$($encModePer.ToUpper())" } else { $null }
+            $eMailParam = if ($eMailAddress) { '?mailAddress=' + "$($eMailAddress.ToLower())" } else { $null }
+            $rebuildParam = if ($rebuild) { '?rebuildList=1' } else { $null }
             
             Write-Verbose "passing encModeParam: $EncModePerParam, eMailParam: $eMailParam, rebuildParam: $rebuildParam"
             $uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', $encModeParam, $eMailParam, $rebuildParam
@@ -322,9 +344,9 @@ function Get-SLEncInfo
         {
             #$uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', ($encModeDom ? '/' + $encModeDom.ToUpper():$null), ($rebuild ? '?rebuildList=1':$null)
             
-            write-verbose 'Constructing domain parameterset'
-            $encModeDomParam   = if ($encModeDom) {'/' + "$($encModeDom.ToUpper())"} else {$null}
-            $rebuildParam   = if ($rebuild) {'?rebuildList=1'} else {$null}            
+            Write-Verbose 'Constructing domain parameterset'
+            $encModeDomParam = if ($encModeDom) { '/' + "$($encModeDom.ToUpper())" } else { $null }
+            $rebuildParam = if ($rebuild) { '?rebuildList=1' } else { $null }            
             
             Write-Verbose "passing encModeParam: $EncModeParam, eMailParam: $eMailParam, rebuildParam: $rebuildParam"
             $uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', $encModeDomParam, $rebuildParam
@@ -380,33 +402,47 @@ function New-SLGINAUser
 {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $true,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user full name'
+        )]
         [Alias("user")]
         [string]$userName,
 
-        [Parameter(Mandatory = $true,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $true,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user eMail address'
+            )]
+        [ValidatePattern('([a-z0-9][-a-z0-9_\+\.]*[a-z0-9])@([a-z0-9][-a-z0-9\.]*[a-z0-9]\.(arpa|root|aero|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|de|dj|dk|dm|do|dz|ec|ee|eg|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|um|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|yu|za|zm|zw)|([0-9]{1,3}\.{3}[0-9]{1,3}))')]
         [Alias("email")]
         [string]$eMailAddress,
 
-        [Parameter(Mandatory = $true,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $true,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'One time password'
+            )]
         [Alias("otp")]
         [string]$oneTimePw,
 
-        [Parameter(Mandatory = $true,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $true,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user mobile number including country code'
+            )]
         [ValidatePattern('^([+](\d{1,3})\s?)?((\(\d{3,5}\)|\d{3,5})(\s)?)\d{3,8}$')]
         [string]$mobile
-
     )
-    
     begin
     {
-        Set-SLConfig |out-null
-    }
-    
+        try {
+            Set-SLConfig | Out-Null
+        }
+        catch {
+            Write-error "Could not load configuration with set-SLConfig"
+        }    }
     process
     {
 
@@ -420,15 +456,15 @@ function New-SLGINAUser
         } | ConvertTo-Json
         
         $invokeParam = @{
-            Uri            = $uri 
-            Method         = 'POST '
-            Credential     = $SLConfig.secret
-            ContentType    = "application/json"
-            body           = $userData
+            Uri         = $uri 
+            Method      = 'POST '
+            Credential  = $SLConfig.secret
+            ContentType = "application/json"
+            body        = $userData
         }
         
-            $NewGinaUser = Invoke-RestMethod @invokeParam
-            return $newGinaUser.message
+        $NewGinaUser = Invoke-RestMethod @invokeParam
+        return $newGinaUser.message
     }
     
     end
@@ -441,95 +477,141 @@ function Set-SLGINAUser
 {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $true,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user eMail adress'
+            )]
+        [ValidatePattern('([a-z0-9][-a-z0-9_\+\.]*[a-z0-9])@([a-z0-9][-a-z0-9\.]*[a-z0-9]\.(arpa|root|aero|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|de|dj|dk|dm|do|dz|ec|ee|eg|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|um|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|yu|za|zm|zw)|([0-9]{1,3}\.{3}[0-9]{1,3}))')]
         [Alias("email")]
         [string]$eMailAddress,
 
-        [Parameter(Mandatory = $false,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user full name'
+            )]
         [Alias("user")]
         [string]$userName,
 
-        [Parameter(Mandatory = $false,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'For MSP´s and multi-customer environments, set the GINA users customer'
+            )]
         [string]$customer,
 
-        [Parameter(Mandatory = $false,
-            ValueFromPipelineByPropertyName = $true)]
-        [ValidateSet('e','d')]
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user language setting e or d'
+            )]
+        [ValidateSet('e', 'd')]
         [string]$language = 'd',
 
-        [Parameter(Mandatory = $false,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user mobile number including country code, i.e. +4911122233344'
+            )]
         [ValidatePattern('^([+](\d{1,3})\s?)?((\(\d{3,5}\)|\d{3,5})(\s)?)\d{3,8}$')]
         [string]$mobile,
 
-        [Parameter(Mandatory = $false,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user password'
+            )]
         [string]$password,
 
-        [Parameter(Mandatory = $false,
-            ValueFromPipelineByPropertyName = $true)]
-        # [ValidatePattern('0','1')]
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user setting ZIP attachment setting'
+            )]
+        [ValidateSet('0','1')]
         [string]$zip_attachment,
 
-        [Parameter(Mandatory = $false,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user passwort reset question'
+            )]
         [string]$question,
 
-        [Parameter(Mandatory = $false,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user passwort reset answer'
+            )]
         [string]$answer,
 
-        [Parameter(Mandatory = $false,
-            ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user created by information'
+            )]
         [string]$creator,
 
-        [Parameter(Mandatory = $false,
-            ValueFromPipelineByPropertyName = $true)]
-        # [ValidatePattern('0','1')]
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user expired setting 0 or 1'
+            )]
+        [ValidateSet('0','1')]
         [string]$expired
     )
     
     begin
     {
-        Set-SLConfig |out-null
+        try {
+            Set-SLConfig | Out-Null
+        }
+        catch {
+            Write-error "Could not load configuration with set-SLCOnfig"
+        }
     }
     
     process
     {
+        try {
+            $urlRoot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
+            $uri = $urlRoot + 'modifyginauser'
+            $userData = [ordered]@{
+                email          = $eMailAddress
+                name           = $userName
+                customer       = $customer
+                language       = $language
+                password       = $password
+                mobile         = $mobile
+                zip_attachment = $zip_attachment
+                question       = $question
+                answer         = $answer
+                creator        = $creator
+                expired        = $expired
+            } | ConvertTo-Json
 
-        $urlRoot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
-        $uri = $urlRoot + 'modifyginauser'
-        $userData = [ordered]@{
-            email          = $eMailAddress
-            name           = $userName
-            customer       = $customer
-            language       = $language
-            password       = $password
-            mobile         = $mobile
-            zip_attachment = $zip_attachment
-            question       = $question
-            answer         = $answer
-            creator        = $creator
-            expired        = $expired
-        } | ConvertTo-Json
-        
-        $invokeParam = @{
-            Uri            = $uri 
-            Method         = 'POST '
-            Credential     = $SLConfig.secret
-            ContentType    = "application/json"
-            body           = $userData
-        }
+            $invokeParam = @{
+                Uri         = $uri 
+                Method      = 'POST '
+                Credential  = $SLConfig.secret
+                ContentType = "application/json"
+                body        = $userData
+            }
             Write-Verbose "Modifying User $EMailAddress using URL $uri"
             $SetGinaUser = Invoke-RestMethod @invokeParam
-            Write-Verbose "Error Code $($SetGinaUser.Errorcode)"
-            Write-Verbose "Error Code $($SetGinaUser.ErrorMessage)"
-            return $SetGinaUser.message
+            if ($($SetGinaUser.Errorcode) -eq '0') {
+                return $SetGinaUser.message
+            }
+            else {
+                $errormessage = Convert-SLRestError -interror $SetGinaUser.Errorcode
+                Write-Error "SEPPmail returned Error $ErrorMessage"
+            }
+        }
+        catch {
+                Write-Error "An error occured, see $error"
+        }
     }
-    
     end
     {
         
