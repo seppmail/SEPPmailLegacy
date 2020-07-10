@@ -16,7 +16,7 @@ The module supports both PowerShell Core and Desktop editions. It has been teste
 
 ### Github
 
-If you have git installed , clone the module into a folder which is listed in the $env:PSmodulePath, preferably your home-PSmodule folder (~\Documents\PowerShell\Modules). Set your location to this folder and enter :
+If you have git installed , clone the module into a folder which is listed in the $env:PSmodulePath, preferably your home-PSmodule folder (~\Documents\PowerShell\Modules). Set your location to this folder and enter:
 `git clone https://github.com/SEPPmail/SeppmailLegacy`
 
 If you dont have git installed, download the files from the repository, unblock the zip file (PS CmdLet `Unblock-File`) and place it in the modules folder.
@@ -25,12 +25,27 @@ IMPORTANT: Its imperative, that the Module is installed in a folder which is inc
 
 ### PowerShell Gallery
 
-We plan to publish the module also on the <https://www.PowerShellGallery.com>, which his currently not the case. If its on the Gallery you can install the module ba running `Install-module SEPPmailLegacy`.
+We plan to publish the module also on the <https://www.PowerShellGallery.com>, which his currently not the case. If its on the Gallery you can install the module by running
+```powershell
+Install-module SEPPmailLegacy
+```
 
 ## Loading and initial configuration of the module
 
-Be sure the module is accessible with `Get-Module SEPPmailLegacy -Listavailable` and load it into memory with `Import-Module SEPPmailLegacy`.
-During the first import, the module checks if there is a configuration file named SLCurrent.config in $HOME\.SEPPMailLegacy, which does not exist by default. Use `New-SLConfig` to create one.
+Be sure the module is accessible with 
+```powershell
+Get-Module SEPPmailLegacy -Listavailable
+```
+and load it into memory with
+```powershell
+Import-Module SEPPmailLegacy
+```
+
+During the first import, the module checks if there is a configuration file named SLCurrent.config in $HOME\.SEPPMailLegacy, which does not exist by default. Use
+```powershell
+New-SLConfig
+```
+to create one.
 
 ### Storing secrets
 
@@ -40,10 +55,15 @@ To avoid entering your legacy-api-user-credentials every time you make a request
 
 Start with:
 
-`Import-Module SEPPmailLegacy`
+```powershell
+Import-Module SEPPmailLegacy
+```
 
 This will load the module. The very first time, you will get an error that there is no configuration file.
 
-`New-SLConfig` will ask you for SEPPmail FQDN, Username and Passwort of a Legacy-API user and create a proper configuration for you.
+```powershell
+New-SLConfig
+```
+ will ask you for SEPPmail FQDN, Username and Passwort of a Legacy-API user and create a proper configuration for you.
 
 Usage examples can be found in the module example folder \Examples.
