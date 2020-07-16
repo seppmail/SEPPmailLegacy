@@ -1,4 +1,3 @@
-function Set-SLConfig {
 <#
 .SYNOPSIS
     Sets the Config to a defined SEPPmail instance and credential
@@ -14,6 +13,8 @@ function Set-SLConfig {
 .NOTES
     General notes
 #>
+
+function Set-SLConfig {
 
     [CmdletBinding()]
     param (
@@ -87,8 +88,6 @@ function Set-SLConfig {
     }
 }
 
-function New-SLConfig
-{
 <#
 .SYNOPSIS
     Creates or overwrites a new Configuration file
@@ -111,7 +110,8 @@ function New-SLConfig
 .NOTES
     General notes
 #>
-
+function New-SLConfig
+{
     [CmdletBinding()]
     param (
         [Parameter(
@@ -182,6 +182,16 @@ function New-SLConfig
     }
 }
 
+<#
+.SYNOPSIS
+    Test a SEPPmail config
+.DESCRIPTION
+    After defining a configuration to a SEPPmail appliance, this CmdLet tests
+    to read some data
+.EXAMPLE
+    PS C:\> Test-SLConfig -SEPPmailFQDN 'securemail.contoso.de'
+    Tests if legacyapi access to securemail.contoso.de works.
+#>
 function Test-SLConfig
 {
     [CmdLetBinding()]
@@ -260,8 +270,6 @@ function Test-SLConfig
     }
 }
 
-function Remove-SLConfig
-{
 <#
 .SYNOPSIS
     Removes a Configuration file
@@ -270,13 +278,9 @@ function Remove-SLConfig
 .EXAMPLE
     PS> Remove-SLConfig -SEPPmailFQDN securemail.contoso.de
     This will remove the config file for the FQDN and the secret in the BuildInLocalLault
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-.NOTES
-    General notes
 #>
+function Remove-SLConfig
+{
 
     [CmdletBinding()]
     param (

@@ -1,3 +1,17 @@
+<#
+.SYNOPSIS
+    This CmdLets returns licensing information.
+.DESCRIPTION
+    Retrieve license information about specific users or a summary report, using the -summary parameter
+.EXAMPLE
+    PS C:\> Get-SLLicenseInfo|Where-Object userid -like 'max@mustermann.com'
+    Get the license status for a specific users
+.EXAMPLE
+    PS C:\> Get-SLLicenseInfo -summary
+    Get the license summary of the appliance
+.NOTES
+    General notes
+#>
 function Get-SLLicenseInfo
 {
     [CmdletBinding()]
@@ -66,7 +80,18 @@ function Get-SLLicenseInfo
         }
     }
 }
-
+<#
+.SYNOPSIS
+    Retrieve group-membership of a SEPPmail appliance
+.DESCRIPTION
+    SEPPmail uses groups to control access to the web-interface and other areas. This CmdLet reads the group configuration.
+.EXAMPLE
+    PS C:\> Get-SLGroupInfo
+    Retrieve all groups and all members
+.EXAMPLE
+    PS C:\> Get-SLGroupInfo -Membername max@mustermann.com
+    Retrieve the membership of a specific user
+#>
 function Get-SLGroupInfo 
 {
     [CmdletBinding()]
@@ -139,6 +164,21 @@ function Get-SLGroupInfo
     }
 }
 
+<#
+.SYNOPSIS
+    Read satistics information from the SEPPmail Appliance
+.DESCRIPTION
+    SEPPmail provides statistic data via the API for reporting purposes.
+.EXAMPLE
+    PS C:\> Get-SLStatsInfo
+    Get all statistics data (i.e. for daily reports)
+.EXAMPLE
+    PS C:\> Get-SLStatsInfo -type user | Where-Object emailAddress -like 'internal.user@contoso.de'
+    Get (sending) user-based status info only
+.EXAMPLE
+    PS C:\> Get-SLStatsInfo -type domain|Where-Object domainname -like mustermann.com
+    Get (sending) domain-based status info only
+#>
 function Get-SLStatsInfo
 {
     [CmdletBinding()]
@@ -246,6 +286,30 @@ function Get-SLStatsInfo
     }
 }
 
+<#
+.SYNOPSIS
+    Read information about encryption for domains and users
+.DESCRIPTION
+    SEPPmail stores information which encryption capabilities are available for an external recipient. The CmdLet
+    can retrieve this data.
+    This CmdLets support the `-rebuild` parameter to get current infos of the statistics database.
+    The CmdLet has three operation modes (ParameterSets), personal, domain and EMailAddress.
+.EXAMPLE
+    PS C:\> Get-SLEncInfo -personal -encModePer SMIME
+    Show external recipients having SMIME as encryption method
+.EXAMPLE
+    PS C:\> Get-SLEncInfo -personal -encModePer PGP
+    Show external recipients having PGP as encryption method
+.EXAMPLE
+    PS C:\> Get-SLEncInfo -personal -encModePer GINA|Where-Object status -ne 'enabled'
+    Show external recipients having GINA as encryption method
+.EXAMPLE
+    PS C:\> Get-SLEncInfo -domain -encModeDom SMIME
+    Show external domains have SMIME as encryption method
+.EXAMPLE
+    PS C:\> Get-SLEncInfo -eMailAddress max@mustermann.com
+    Find out what encryption methods are possible for an external recipient
+#>
 function Get-SLEncInfo
 {
     [CmdletBinding()]
@@ -398,6 +462,22 @@ function Get-SLEncInfo
     }
 }
 
+<#
+.SYNOPSIS
+    Create a GINA-User
+.DESCRIPTION
+    This PS Module allows you to create and modify GINA Users.
+    This avoids the registration process for external recipients
+    and allows the usage of known passwords for the user
+    (i.e. an invoice Number, social security number or similar) 
+    and the mobile number to communicate via a second channel.
+.EXAMPLE
+    PS C:\> New-SLGINAUser -userName 'Max Mustermann' -eMailAddress max.mustermann@test.co -oneTimePw 'hZ76$59' -mobile '+49123456789'
+    To create a new GINA user use the CmdLet as above.
+.EXAMPLE
+    PS C:\> Import-Csv .\examples\NewGINAUsers.csv|New-SLGINAUser
+    Use a CSV File (see examples folder) to bulk-create GINA Users.
+#>
 function New-SLGINAUser
 {
     [CmdletBinding()]
@@ -512,6 +592,19 @@ function New-SLGINAUser
     }
 }
 
+<#
+.SYNOPSIS
+    Update GINA Users properties
+.DESCRIPTION
+    This CmdLet lets you modify and add additional properties on GINA Users.
+    This CmdLet is also pipeline-aware.
+.EXAMPLE
+    PS C:\> Set-SLGINAUser -eMailAddress 'alice.miller@contoso.com' -answer 'Red'
+    Update a single property of a GINA User
+.EXAMPLE
+    PS C:\> Import-Csv .\examples\UpdateGINAUsers.csv|Set-SLGINAUser
+    Mass-update GINA Users
+#>
 function Set-SLGINAUser
 {
     [CmdletBinding()]

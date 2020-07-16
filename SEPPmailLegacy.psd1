@@ -12,7 +12,7 @@
 RootModule = '.\SEPPmailLegacy.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.7.5'
+ModuleVersion = '0.8.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core','Desktop')
@@ -24,13 +24,13 @@ GUID = '48c99d60-40c0-4c5e-a7f0-ab20e13e4db7'
 Author = 'stadlmair@seppmail.at'
 
 # Company or vendor of this module
-CompanyName = 'SEPPmail'
+CompanyName = 'SEPPmail AG'
 
 # Copyright statement for this module
 Copyright = '(c) SEPPmail AG. All rights reserved.'
 
 # Description of the functionality provided by this module
-# Description = ''
+Description = 'Beginning from SEPPmail Appliance Version 11.1.7, SEPPmail has a Legacy-API to retrieve statistics and encryption information via REST, including the option to mass-generate GINA-Users. Even though the API is not officially supported, some people find it pretty useful. This PowerShell module is a wrapper around this API to allow more convenient operation and interaction from the command line.'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '5.1'
@@ -68,8 +68,9 @@ ScriptsToProcess = @('ModuleInit.ps1')
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
 # NestedModules = @()
+
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-#FunctionsToExport = @()
+# FunctionsToExport = @()
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @(
@@ -107,16 +108,24 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @('SEPPmail', 'REST-API', 'Legacy APP')
+        Tags = @(
+                'SEPPmail',
+                'REST-API',
+                'LegacyAPI',
+                'PSEdition_Desktop',
+                'PSEdition_Core',
+                'Windows',
+                'Linux',
+                'MacOS')
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://github.com/seppmail/SEPPmailLegacy/blob/master/LICENSE'
 
         # A URL to the main website for this project.
-        # ProjectUri = ''
+        ProjectUri = 'https://github.com/seppmail/SEPPmailLegacy'
 
         # A URL to an icon representing this module.
-        # IconUri = ''
+        IconUri = 'https://seppmail.de/wp-content/uploads/logo_seppmail_V1_Screen_S2.png'
 
         # ReleaseNotes of this module
         ReleaseNotes = 
@@ -136,6 +145,8 @@ PrivateData = @{
         Extended CSV file for Set-SLGinaUser
         Added parameter help
         Added error handling for GINA CmdLets
+
+160720: 0.8.0 Prepare for PSGallery Upload
 '@
 
         # Prerelease string of this module
@@ -152,7 +163,7 @@ PrivateData = @{
 } # End of PrivateData hashtable
 
 # HelpInfo URI of this module
-# HelpInfoURI = ''
+HelpInfoURI = 'https://github.com/seppmail/SEPPmailLegacy/blob/master/examples/examples.md'
 
 # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
 # DefaultCommandPrefix = ''

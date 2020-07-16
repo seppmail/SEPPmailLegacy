@@ -1,4 +1,10 @@
 # Place for module - internal functions
+<#
+.SYNOPSIS
+    Creates a URL out of FQDN and the admin-Port defined in the configuation file
+.DESCRIPTION
+    This is for module internal use only
+#>
 function New-SLUrlRoot {
     [CmdletBinding()]
     param (
@@ -28,11 +34,7 @@ function New-SLUrlRoot {
 .SYNOPSIS
     Converts REST Errors to readable errors
 .DESCRIPTION
-    the REST-API returns 11 different error numeric codes, this cmdLet transforms them into written messages.
-.EXAMPLE
-    
-.EXAMPLE
-    Another example of how to use this cmdlet
+    The REST-API returns 11 different error numeric codes, this cmdLet transforms them into written messages.
 #>
 function Convert-SLRestError {
     [CmdletBinding()]
