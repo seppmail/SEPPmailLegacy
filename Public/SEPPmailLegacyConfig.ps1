@@ -362,7 +362,7 @@ function Find-SLConfig
         }
         else {
             Write-Verbose 'Storing $Configurations array of all configuration files'
-            $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config'))
+            $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config')-Exclude 'SLCurrent*')
         }
     }
     process
