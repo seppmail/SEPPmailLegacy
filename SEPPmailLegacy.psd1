@@ -30,7 +30,10 @@ CompanyName = 'SEPPmail AG'
 Copyright = '(c) SEPPmail AG. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Beginning from SEPPmail Appliance Version 11.1.7, SEPPmail has a Legacy-API to retrieve statistics and encryption information via REST, including the option to mass-generate GINA-Users. Even though the API is not officially supported, some people find it pretty useful. This PowerShell module is a wrapper around this API to allow more convenient operation and interaction from the command line.'
+Description = 'Receive data and manage GINA-Users from your SEPPmail Appliance beginning with SEPPmail Version 11.1.9.
+With the Legacy-API you can retrieve statistics and encryption information via REST, including the option to mass-generate GINA-Users.
+Even though the API is not officially supported, some people find it pretty useful.
+This PowerShell module is a wrapper around this API to allow more convenient operation and interaction from the command line.'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '5.1'
@@ -125,7 +128,7 @@ PrivateData = @{
         ProjectUri = 'https://github.com/seppmail/SEPPmailLegacy'
 
         # A URL to an icon representing this module.
-        IconUri = 'https://seppmail.de/wp-content/uploads/logo_seppmail_V1_Screen_S2.png'
+        # IconUri = ''
 
         # ReleaseNotes of this module
         ReleaseNotes = 
@@ -147,10 +150,12 @@ PrivateData = @{
         Added error handling for GINA CmdLets
 
 160720: 0.8.0 Prepare for PSGallery Upload
+
+170720: Cleaning up beta issues and prettify for PS Gallery
 '@
 
         # Prerelease string of this module
-        Prerelease = 'beta2'
+        Prerelease = 'RC1'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false

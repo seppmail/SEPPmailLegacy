@@ -1,12 +1,15 @@
 # SEPPmail Legacy API Powershell Module
 
-Beginning from SEPPmail Appliance Version 11.1.7, SEPPmail has a Legacy-API to retrieve statistics and encryption information via REST, including the option to mass-generate GINA-Users. Even though the API is not officially supported, some people find it pretty useful. This PowerShell module is a wrapper around this API to allow more convenient operation and interaction from the command line.
+Receive data and manage GINA-Users from your SEPPmail Appliance beginning with SEPPmail Version 11.1.9.
+With the Legacy-API you can retrieve statistics and encryption information via REST, including the option to mass-generate GINA-Users.
+Even though the API is not officially supported, some people find it pretty useful.
+This PowerShell module is a wrapper around this API to allow more convenient operation and interaction from the command line.
 
 ## Prerequisites
 
-The module requires minimum SEPPmail version 11.1.7 and Powershell 5.1"
+The module requires minimum SEPPmail version 11.1.9 and minimum Powershell 5.1 on Windows, PowerShell 7 on Windows, Linux or macOS"
 
-On the SEPPmail Appliance, you need to have a user configured in the reporting group as documented in the Legacy-API to access the API via REST.
+On the SEPPmail Appliance, you need to have a user configured in the "legacyappadmin" group. Create the group if needed.
 
 ## PowerShell Multi-Edition Support
 
@@ -14,21 +17,21 @@ The module supports both PowerShell Core and Desktop editions. It has been teste
 
 ## Installation and Setup Info
 
-### Github
-
-If you have git installed , clone the module into a folder which is listed in the $env:PSmodulePath, preferably your home-PSmodule folder (~\Documents\PowerShell\Modules). Set your location to this folder and enter:
-`git clone https://github.com/SEPPmail/SeppmailLegacy`
-
-If you dont have git installed, download the files from the repository, unblock the zip file (PS CmdLet `Unblock-File`) and place it in the modules folder.
-
-IMPORTANT: Its imperative, that the Module is installed in a folder which is included in the $env:PSModulePath, otherwise it will not work.
-
-### PowerShell Gallery
+### PowerShell Gallery (preferred option)
 
 We plan to publish the module also on the <https://www.PowerShellGallery.com>, which his currently not the case. If its on the Gallery you can install the module by running
 ```powershell
 Install-module SEPPmailLegacy
 ```
+
+### Github
+
+If you have no access to the PowerShell Gallery but git installed, clone the module into a folder which is listed in the $env:PSmodulePath, preferably your home-PSmodule folder (~\Documents\PowerShell\Modules). Set your location to this folder and enter:
+`git clone https://github.com/SEPPmail/SeppmailLegacy`
+
+If you dont have git installed, download the files from the repository, unblock the zip file (PS CmdLet `Unblock-File`) and place it in the modules folder.
+
+IMPORTANT: Its imperative, that the Module is installed in a folder which is included in the $env:PSModulePath, otherwise it will not work.
 
 ## Loading and initial configuration of the module
 

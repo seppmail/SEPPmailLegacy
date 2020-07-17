@@ -12,7 +12,6 @@
 #>
 [CmdLetBinding()]
 param()
-
 Write-Verbose 'Setting Default variables'
 $global:SLConfig = $null
 $global:SlConfigContent = [ordered]@{}
@@ -34,6 +33,7 @@ if (!(Test-Path $SLConfigFilePath))
     "Using Configuration from default config path $SLconfigFilePath"
     Get-content $SLConfigFilePath|convertfrom-JSON
 }
+
 
 
 

@@ -3,3 +3,4 @@ $ModulePath = Split-Path ((Get-Module -Name SEPPmailLegacy -Listavailable).Path)
 . $ModulePath\Public\SEPPmailLegacyConfig.ps1
 . $ModulePath\Private\SEPPmailLegacyPrivate.ps1
 
+

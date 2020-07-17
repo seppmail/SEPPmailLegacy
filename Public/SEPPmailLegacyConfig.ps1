@@ -237,8 +237,6 @@ function Test-SLConfig
                     Write-Host "TCP Connect to $($conf.SEPPmailFQDN) on Port $($conf.AdminPort) worked." -ForegroundColor Green
                 }
             }
-
-
             
             # Try login at SEPPmail and receive group INfo
 
@@ -254,7 +252,7 @@ function Test-SLConfig
             catch
             {
                 Write-Error "Most likely an access error"
-                Write-Error "Check group membership of Legacy API group, username and password, details below"
+                Write-Error "Check e-Mail/password and membership of the user to the group `"legacyappadmin`". Create the group if necessary."
                 $_
             }
         }
@@ -266,7 +264,7 @@ function Test-SLConfig
     }
     end
     {
-        # shall return true or false
+        # No code here
     }
 }
 
