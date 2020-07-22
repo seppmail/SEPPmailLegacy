@@ -14,7 +14,8 @@
     General notes
 #>
 
-function Set-SLConfig {
+function Set-SLConfig
+{
 
     [CmdletBinding()]
     param (
@@ -33,23 +34,26 @@ function Set-SLConfig {
     
     process
     {
-        if ($SEPPmailFQDN) {
+        if ($SEPPmailFQDN)
+        {
             Write-Verbose "Check if a file $SEPPmailFQDN.config exists"
             $SLConfigFilePath = (Join-Path -Path $SLConfigPath -ChildPath $SEPPmailFQDN) + '.config'
         }
-        else {
+        else
+        {
             Write-Verbose "No FQDN specified, load default config file"
             $SLConfigFilePath = Join-Path -Path $SLConfigPath -ChildPath 'SLCurrent.config'
         }
 
-        if (!(Test-Path $SLConfigFilePath)) {
+        if (!(Test-Path $SLConfigFilePath))
+        {
             Write-Warning 'Configuration file does not exist - please check FQDN or create a new configuration with New-SLConfig'
             break
         }
 
         Write-Verbose "Check if the $SEPPmailFQDN.config file contains all needed properties"
         $conf = Get-Content $SLConfigFilePath | ConvertFrom-Json
-        If ((!($conf.SEPPmailFQDN)) -or (!($conf.Secret)) -or (!($conf.AdminPort)))
+        If ((!($conf.SEPPmailFQDN)) -or (!($conf.Secret)) -or (!($conf.AdminPort)) -or (!($conf.SkipCertificateCheck)))
         {
             Write-Warning -Message "Configuration incomplete! Run New-SLConfig to create a proper configuration"
             break
@@ -64,7 +68,7 @@ function Set-SLConfig {
         }
         else
         {
-            $secureSecret = Import-CliXML -Path $SecFilePath
+            $secureSecret = Import-Clixml -Path $SecFilePath
         }
         <#
         Write-Verbose "Writing default-Config File"
@@ -73,15 +77,17 @@ function Set-SLConfig {
         #>
         Write-Verbose "Writing securesecret to config variable."
         $global:SLConfig = [ordered]@{
-            SEPPmailFQDN    = $conf.SEPPmailFQDN
-            Secret          = $secureSecret
-            AdminPort       = $conf.Adminport
+            SEPPmailFQDN         = $conf.SEPPmailFQDN
+            Secret               = $secureSecret
+            AdminPort            = $conf.Adminport
+            SkipCertificateCheck = $true
         }
     }
     
     end
     {
-        if (!(Test-Path $SLConfigFilePath)) {
+        if (!(Test-Path $SLConfigFilePath))
+        {
             Write-Warning 'There is no current configuration file defined (SLConfig.config). Run New-SLConfig without the -NotCurrent parameter to create one.'
         }
         return $conf
@@ -96,19 +102,15 @@ function Set-SLConfig {
 .EXAMPLE
     PS> New-SLConfig -SEPPmailFQDN securemail.contoso.de -UserName Legacyadmin@contoso.de
     This will create the config file for the FQDN.
-
-    PS> New-SLConfig -SEPPmailFQDN securemail.contoso.de -UserName Legacyadmin@contoso.de -AdminPort 8663
+.EXAMPLE
+    PS> New-SLConfig -SEPPmailFQDN localhost -UserName Legacyadmin@contoso.de -SkipCertificateCheck
+    This will create the config file for the FQDN and will not run Certificatechecks on this machine.
+.EXAMPLE
+    PS> New-SLConfig -SEPPmailFQDN securemail.contoso.de -UserName Legacyadmin@contoso.de -AdminPort 10443
     This will create the config file for the FQDN with a different AdminPort
-
+.EXAMPLE
     PS> New-SLConfig -SEPPmailFQDN securemail.contoso.de -UserName Legacyadmin@contoso.de -NotCurrent
     This will create a config file but NOT copy it to the SLConfig.config. So it will not be used immediately.
-
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-.NOTES
-    General notes
 #>
 function New-SLConfig
 {
@@ -129,10 +131,18 @@ function New-SLConfig
 
         [Parameter(
             Mandatory = $false,
-            ValueFromPipelineByPropertyName = $true)]
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage = 'Default is 8443, but you may use another port like 10443')]
         [Alias("Port")]
         [String]$AdminPort = '8443',
 
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage = 'For testmachines which have no valid certificates, turn this on by simply adding -SkipCertificateCheck in the commandline')]
+        [Alias("Skip")]
+        [switch]$SkipCertificateCheck = $false,
+         
         [Parameter(
             Mandatory = $false,
             HelpMessage = 'Set if you do NOT want this new config to be set as default'
@@ -155,24 +165,27 @@ function New-SLConfig
         {
             Write-Verbose "Secret for username: $userName not found, creating new" 
             [Securestring]$secretPassword = Read-Host -Prompt "Enter Password for the above username" -AsSecureString
-            New-Object -TypeName PSCredential -ArgumentList ($userName, $secretpassword)|Export-Clixml -Path $SecFilePath
+            New-Object -TypeName PSCredential -ArgumentList ($userName, $secretpassword) | Export-Clixml -Path $SecFilePath
         }
 
         Write-Verbose "Set Parametervalues into temporary config"
         $conf.SEPPmailFQDN = $SEPPmailFQDN
         If ($UserName) { $conf.Secret = $UserName }
         If ($AdminPort) { $conf.AdminPort = $AdminPort }
+        $conf.SkipCertificateCheck = $SkipCertificateCheck
 
         Write-Verbose "Writing new config to file."
         $SLConfigFilePath = (Join-Path $SLConfigPath -ChildPath $SEPPmailFQDN) + ".config"
         $conf | ConvertTo-Json | New-Item -Path $SLConfigFilePath -Force | Out-Null
         
-        If ($Notcurrent) {
+        If ($Notcurrent)
+        {
             Write-Verbose 'Just created config file, not copying it to SLCurrent.config'
         }
-        else {
+        else
+        {
             $CurrentSLConfigFilePath = (Join-Path $SLConfigPath -ChildPath 'SLCurrent') + '.config'
-            Copy-Item -Path $SLConfigFilePath -Destination $CurrentSLConfigFilePath |out-null
+            Copy-Item -Path $SLConfigFilePath -Destination $CurrentSLConfigFilePath | Out-Null
         }
     }
     
@@ -206,7 +219,8 @@ function Test-SLConfig
     {
         try
         {
-            if ($IsWindows) {
+            if ($IsWindows)
+            {
                 if (!((Resolve-DnsName -Name $conf.SEPPmailFQDN -ErrorAction 0).IPAddress))
                 {
                     Write-Error "Could not resolve SEPPmailFQDN, please check DNS and FQDN Name!"
@@ -218,7 +232,8 @@ function Test-SLConfig
             }
 
             #((Test-Netconnection -ComputerName $conf.SEPPmailFQDN -Port $conf.AdminPort).TcpTestSucceeded)
-            if ($IsWindows) {
+            if ($IsWindows)
+            {
                 if (!((Test-NetConnection -ComputerName $conf.SEPPmailFQDN -Port $conf.AdminPort -WarningAction SilentlyContinue).TcpTestSucceeded))
                 {
                     Write-Error "Could not connect to port $conf.AdminPort! Check Firewalls and Port configuration." 
@@ -227,8 +242,10 @@ function Test-SLConfig
                 {
                     Write-Host "TCP Connect to $($conf.SEPPmailFQDN) on Port $($conf.AdminPort) worked." -ForegroundColor Green
                 }
-            } else {
-                if (!(Test-Connection -ComputerName $conf.SEPPmailFQDN -TcpPort $conf.AdminPort -WarningAction SilentlyContinue -quiet))
+            }
+            else
+            {
+                if (!(Test-Connection -ComputerName $conf.SEPPmailFQDN -TcpPort $conf.AdminPort -WarningAction SilentlyContinue -Quiet))
                 {
                     Write-Error "Could not connect to port $conf.AdminPort! Check Firewalls and Port configuration." 
                 }
@@ -296,29 +313,34 @@ function Remove-SLConfig
     
     process
     {
-        try {
+        try
+        {
             Write-Verbose "Read File "
             $FQDNConfigFilePath = (Join-Path $SLConfigPath -ChildPath $SEPPmailFQDN) + ".config"
 
-            if ($FQDNConfigFilePath) {
+            if ($FQDNConfigFilePath)
+            {
                 Write-Verbose 'Config file found, trying to remove secrets'
-                $SecretName = (Get-Content $FQDNConfigFilePath|convertFrom-JSON).Secret
+                $SecretName = (Get-Content $FQDNConfigFilePath | ConvertFrom-Json).Secret
                 $SecFilePath = Join-Path -Path $SLConfigPath -ChildPath ("$SecretName" + ".xml")
-                If ((Import-CliXML -Path $SecFilePath -ea 0))
-                    {
+                If ((Import-Clixml -Path $SecFilePath -ea 0))
+                {
                     Write-Verbose "Removing Credentials file $SecFilePath"
                     Remove-Item -Path $SecFilePath -Force
-                    }
-                if (Test-Path $FQDNConfigFilePath) {
+                }
+                if (Test-Path $FQDNConfigFilePath)
+                {
                     Write-Verbose "Removing File $FQDNConfigFilePath"
                     Remove-Item -Path $FQDNConfigFilePath -Force
                 }
-                else {
+                else
+                {
                     Write-Warning "Config File for $SEPPmailFQDN not found"
                 }
             }
         }
-        catch {
+        catch
+        {
             $_.Exception
         }
     }
@@ -329,7 +351,7 @@ function Remove-SLConfig
 
 function Find-SLConfig
 {
-<#
+    <#
 .SYNOPSIS
     Lists available Configuration files
 .DESCRIPTION
@@ -346,19 +368,21 @@ function Find-SLConfig
 
     [CmdletBinding()]
     param (        
-    [Parameter(
-        Mandatory = $false
+        [Parameter(
+            Mandatory = $false
         )]
-    [String]$ConfigName
+        [String]$ConfigName
 
     )
     begin
     {
-        if ($ConfigName) {
+        if ($ConfigName)
+        {
             Write-Verbose 'Storing names $Configurations array'
-            $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config') -Exclude 'SLCurrent*'|where-object Name -like $ConfigName)
+            $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config') -Exclude 'SLCurrent*' | Where-Object Name -Like $ConfigName)
         }
-        else {
+        else
+        {
             Write-Verbose 'Storing $Configurations array of all configuration files'
             $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config')-Exclude 'SLCurrent*')
         }
@@ -366,9 +390,10 @@ function Find-SLConfig
     process
     {
         Write-Verbose 'Looping through $configurations array'
-        foreach ($conf in $Configurations) {
+        foreach ($conf in $Configurations)
+        {
             Write-Verbose 'Emit Configuration'
-            Get-Content $conf |ConvertFrom-JSON
+            Get-Content $conf | ConvertFrom-Json
         }
     }
     end

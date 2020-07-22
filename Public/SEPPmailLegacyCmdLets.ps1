@@ -205,24 +205,25 @@ function Get-SLStatsInfo
 
     process 
     {
+        try {
         $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
-        if ($rebuild)
-        {
-            $uribase = $urlroot + 'statistics' + '?' + 'returnType' + '=' + 'CSV' + '&rebuildList'
-        }
-        else 
-        {
-            $uribase = $urlroot + 'statistics' + '?' + 'returnType' + '=' + 'CSV'
-        }
-        
-        if ($type -like 'user') 
-        {
-            $uri = $uribase + '&statisticsType=user'
-            $userStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
-            $userStatsRaw.'accountLastUsed'
-            $userArray = @()
-            $userArray = $userStatsRaw | ForEach-Object `
+            if ($rebuild)
             {
+                $uribase = $urlroot + 'statistics' + '?' + 'returnType' + '=' + 'CSV' + '&rebuildList'
+            }
+            else 
+            {
+                $uribase = $urlroot + 'statistics' + '?' + 'returnType' + '=' + 'CSV'
+            }
+
+            if ($type -like 'user') 
+            {
+                $uri = $uribase + '&statisticsType=user'
+                $userStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
+                $userStatsRaw.'accountLastUsed'
+                $userArray = @()
+                $userArray = $userStatsRaw | ForEach-Object `
+                {
                 [ordered]@{
                     'emailAddress'                  = [string]$_.'E-mail address'
                     'userId'                        = if ((!($_.'User ID'))) { 'none' } else { [String]$_.'User ID' }
@@ -251,11 +252,11 @@ function Get-SLStatsInfo
                     'hinDomainEncMailsReceived'     = [int]$_.'HIN domain encrypted mails received'
                     'mailsReroutedToIncamail'       = [int]$_.'Mails rerouted to Incamail'
                 }
+                }
+                return $userArray | ForEach-Object { [pscustomobject]$_ }
             }
-            return $userArray | ForEach-Object { [pscustomobject]$_ }
-        }
-        if ($type -like 'domain') 
-        {
+            if ($type -like 'domain') 
+            {
             $uri = $uribase + '&statisticsType=domain'
             $domStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
             Write-Verbose "Creating output Hashtables"
@@ -282,6 +283,9 @@ function Get-SLStatsInfo
                 }
             }
             return $domArray | ForEach-Object { [pscustomobject]$_ }
+            }
+        } catch {
+            Write-Error "Request to SEPPmail appliance failed with exception: $($_.Exception)"
         }
     }
 }
@@ -390,9 +394,9 @@ function Get-SLEncInfo
     
     process
     {
-        # Powershell 2-6 editions
-        if ($PSCmdlet.ParameterSetName -eq 'personal') 
-        {
+        try {
+            if ($PSCmdlet.ParameterSetName -eq 'personal') 
+            {
             #$uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', ($encModePer ? '/' + $encModePer.ToUpper():$null), ($eMailAddress ? '?mailAddress=' + $eMailAddress.ToLower():$null), ($rebuild ? '?rebuildList=1':$null)
             
             Write-Verbose 'Constructing personal parameterset'
@@ -403,9 +407,9 @@ function Get-SLEncInfo
             Write-Verbose "passing encModeParam: $EncModePerParam, eMailParam: $eMailParam, rebuildParam: $rebuildParam"
             $uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', $encModeParam, $eMailParam, $rebuildParam
             Write-Verbose "Final URI: $URI"
-        }
-        elseif ($PSCmdlet.ParameterSetName -eq 'domain')
-        {
+            }
+            elseif ($PSCmdlet.ParameterSetName -eq 'domain')
+            {
             #$uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', ($encModeDom ? '/' + $encModeDom.ToUpper():$null), ($rebuild ? '?rebuildList=1':$null)
             
             Write-Verbose 'Constructing domain parameterset'
@@ -415,14 +419,14 @@ function Get-SLEncInfo
             Write-Verbose "passing encModeParam: $EncModeParam, eMailParam: $eMailParam, rebuildParam: $rebuildParam"
             $uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', $encModeDomParam, $rebuildParam
             Write-Verbose "Final URI: $URI"
-        }
-        elseif ($PSCmdlet.ParameterSetName -eq 'eMail')
-        {
+            }
+            elseif ($PSCmdlet.ParameterSetName -eq 'eMail')
+            {
             $uri = "{0}{1}/?mailAddress={2}" -f $urlroot, 'encinfo', $eMailAddress
-        }
-        $rawdata = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret
-        switch ($PSCmdlet.ParameterSetname) 
-        {
+            }
+            $rawdata = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret
+            switch ($PSCmdlet.ParameterSetname) 
+            {
             personal
             {
                 Switch ($encModePer)
@@ -454,6 +458,9 @@ function Get-SLEncInfo
                 if ($rawdata.gina.personal.status) { $returndata | Add-Member -MemberType Noteproperty -Name GINAperonal -Value $rawdata.gina.personal.status }
                 return $returndata
             }
+            }
+        } catch {
+            Write-Error "Request to SEPPmail appliance failed with exception $($_.Exception)"
         }
     }
     end
@@ -478,7 +485,7 @@ function Get-SLEncInfo
     PS C:\> Import-Csv .\examples\NewGINAUsers.csv|New-SLGINAUser
     Use a CSV File (see examples folder) to bulk-create GINA Users.
 #>
-function New-SLGINAUser
+function New-SLGinaUser
 {
     [CmdletBinding()]
     param (
@@ -551,40 +558,44 @@ function New-SLGINAUser
         }
         catch {
             Write-error "Could not load configuration with set-SLConfig"
-            Write-Error "$error"
+            Write-Error $_
         }
     }
-    process
-    {
-        $urlRoot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
-        $uri = $urlRoot + 'newginauser'
-        $userData = [ordered]@{
-            email    = $eMailAddress
-            password = $pwd
-            name     = $userName
-            mobile   = $mobile
-            expired  = $expired
-            question = $question
-            answer   = $answer
-            customer = $customer
-        } | ConvertTo-Json
-        
-        $invokeParam = @{
-            Uri         = $uri 
-            Method      = 'POST '
-            Credential  = $SLConfig.secret
-            ContentType = "application/json"
-            body        = $userData
-        }
-        Write-Verbose "Creating new GINA User $userName with E-mailAdress $eMailAddress"
-        $NewGinaUser = Invoke-RestMethod @invokeParam
-        Write-Verbose "ErrorCode $($NewGinaUser.ErrorCode)"
-        if (!($($NewGinaUser.errorCode))) {
-            return $NewGinaUser.message
-        }
-        else {
-            Write-Error "SEPPmail returned Error $($newGinaUser.errorCode): $($NewGinaUser.ErrorMessage)"
-        }
+    process {
+        try {
+            $urlRoot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
+            $uri = $urlRoot + 'newginauser'
+            # V1.1 $uri = $urlRoot + 'ginauser/new'
+            $userData = [ordered]@{
+                email    = $eMailAddress
+                password = $pwd
+                name     = $userName
+                mobile   = $mobile
+                expired  = $expired
+                question = $question
+                answer   = $answer
+                customer = $customer
+            } | ConvertTo-Json
+
+            $invokeParam = @{
+                Uri         = $uri 
+                Method      = 'POST '
+                Credential  = $SLConfig.secret
+                ContentType = "application/json"
+                body        = $userData
+            }
+            Write-Verbose "Creating new GINA User $userName with E-mailAdress $eMailAddress"
+            $NewGinaUser = Invoke-RestMethod @invokeParam
+            Write-Verbose "ErrorCode $($NewGinaUser.ErrorCode)"
+            if (!($($NewGinaUser.errorCode))) {
+                return $NewGinaUser.message
+            }
+            else {
+                Write-Error "SEPPmail returned Error $($newGinaUser.errorCode): $($NewGinaUser.ErrorMessage)"
+            } 
+        } catch {
+            Write-Error "Request to SEPPmail failes with exception $($_.Exception)"
+            }
     }
     end
     {
@@ -605,9 +616,9 @@ function New-SLGINAUser
     PS C:\> Import-Csv .\examples\UpdateGINAUsers.csv|Set-SLGINAUser
     Mass-update GINA Users
 #>
-function Set-SLGINAUser
+function Set-SLGinaUser
 {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(
             Mandatory                       = $true,
@@ -711,6 +722,7 @@ function Set-SLGINAUser
         try {
             $urlRoot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
             $uri = $urlRoot + 'modifyginauser'
+            # V1.1 $uri = $urlRoot + 'ginauser/set'
             $userData = [ordered]@{
                 email          = $eMailAddress
                 name           = $userName
@@ -733,10 +745,12 @@ function Set-SLGINAUser
                 body        = $userData
             }
             Write-Verbose "Modifying GINA User $EMailAddress using URL $uri"
-            $SetGinaUser = Invoke-RestMethod @invokeParam
-            Write-Verbose "ErrorCode $($SetGinaUser.ErrorCode)"
-            if (!($($SETGinaUser.errorCode))) {
-                return $SetGinaUser.message
+            if ($PSCmdLet.ShouldProcess($($userdata.eMailAddress),'Update GINA User')) {
+                $SetGinaUser = Invoke-RestMethod @invokeParam
+                Write-Verbose "ErrorCode $($SetGinaUser.ErrorCode)"
+                if (!($($SETGinaUser.errorCode))) {
+                    return $SetGinaUser.message
+                }
             }
             else {
                 Write-Error "SEPPmail returned Error $($SetGinaUser.errorCode): $($SetGinaUser.ErrorMessage)"
@@ -748,6 +762,108 @@ function Set-SLGINAUser
     }
     end
     {
-        
+        if ($SetGinaUser) {return $SetGinaUser}
+    }
+}
+
+<#
+.SYNOPSIS
+    Get a GINA Users properties
+.DESCRIPTION
+    This CmdLet lets youread properties on an existing GINA User.
+    This CmdLet is also pipeline-aware.
+.EXAMPLE
+    PS C:\> Get-SLGINAUser 
+    Get all GINA Users
+.EXAMPLE
+    PS C:\> Get-SLGINAUser -eMailAddress 'alice.miller@contoso.com'
+    Get information about a GINA User
+.EXAMPLE
+    PS C:\> Import-Csv .\examples\UpdateGINAUsers.csv|Get-SLGINAUser
+    Mass-receive GINA Users (test if they exist)
+#>
+function Get-SLGinaUser
+{
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user eMail adress'
+            )]
+        [ValidatePattern('([a-z0-9][-a-z0-9_\+\.]*[a-z0-9])@([a-z0-9][-a-z0-9\.]*[a-z0-9]\.(arpa|root|aero|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|de|dj|dk|dm|do|dz|ec|ee|eg|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|um|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|yu|za|zm|zw)|([0-9]{1,3}\.{3}[0-9]{1,3}))')]
+        [Alias('email')]
+        [string]$eMailAddress,
+
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user full name'
+            )]
+        [Alias('user')]
+        [string]$userName,
+
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'GINA user mobile number including country code, i.e. +4911122233344 or 004911122233344'
+            )]
+        [ValidatePattern('^([+](\d{1,3})\s?)?((\(\d{3,5}\)|\d{3,5})(\s)?)\d{3,8}$')]    
+        [string]$mobile,
+
+        [Parameter(
+            Mandatory                       = $false,
+            ValueFromPipelineByPropertyName = $true,
+            HelpMessage                     = 'For MSP´s and multi-customer environments, set the GINA users customer'
+            )]
+        [string]$customer
+
+    )
+    
+    begin
+    {
+        try {
+            Set-SLConfig | Out-Null
+        }
+        catch {
+            Write-error "Could not load configuration with Set-SLConfig"
+            Write-Error "$error"
+        }
+    }
+    
+    process
+    {
+        try {
+            $urlRoot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
+
+            Write-Verbose "Passing eMailAddress: $eMailAddress, userName: $userName, mobile: $mobile, customer: $customer"
+            #############################
+            $uri = "{0}{1}{2}{3}{4}{5}" -f $urlroot, 'ginauser/get', $eMailAddress, $userName, $mobile, $customer
+            #############################
+            $invokeParam = @{
+                Uri         = $uri 
+                Method      = 'GET'
+                Credential  = $SLConfig.secret
+                ContentType = "application/json"
+            }
+            Write-Verbose "Receiving GINA Users using URL $uri"
+            if ($PSCmdLet.ShouldProcess($uri,'Get GINA User')) {
+                $GetGinaUser = Invoke-RestMethod @invokeParam
+                Write-Verbose "ErrorCode $($SetGinaUser.ErrorCode)"
+                if (!($($GetGinaUser.errorCode))) {
+                    return $GetGinaUser.message
+                }
+            }
+            else {
+                Write-Error "SEPPmail returned error $($SetGinaUser.errorCode): $($SetGinaUser.ErrorMessage)"
+            }
+        }
+        catch {
+                Write-Error "An error occured, see $error"
+        }
+    }
+    end
+    {
+        if ($GetGinaUser) {return $GetGinaUser}
     }
 }

@@ -13,13 +13,13 @@ On the SEPPmail Appliance, you need to have a user configured in the "legacyappa
 
 ## PowerShell Multi-Edition Support
 
-The module supports both PowerShell Core and Desktop editions. It has been tested with PS 5.1 (Windows) and PS 7.0.2 (MacOS and Ubuntu). Other Versions (6.x) and other Operating Systems will most likely work as well.
+The module supports both PowerShell Core and Desktop editions. It has been tested with PS 5.1 (Windows) and PS 7.0.2 (MacOS and Ubuntu). Other Versions (6.x) and other operating systems will most likely work as well.
 
 ## Installation and Setup Info
 
 ### PowerShell Gallery (preferred option)
 
-We plan to publish the module also on the <https://www.PowerShellGallery.com>, which his currently not the case. If its on the Gallery you can install the module by running
+We have published the module on the <https://www.PowerShellGallery.com>. You can install the module by running
 ```powershell
 Install-module SEPPmailLegacy
 ```
@@ -35,7 +35,7 @@ IMPORTANT: Its imperative, that the Module is installed in a folder which is inc
 
 ## Loading and initial configuration of the module
 
-Be sure the module is accessible with 
+Be sure the module is accessible with
 ```powershell
 Get-Module SEPPmailLegacy -Listavailable
 ```
@@ -69,4 +69,16 @@ New-SLConfig
 ```
  will ask you for SEPPmail FQDN, Username and Passwort of a Legacy-API user and create a proper configuration for you.
 
-Usage examples can be found in the module example folder \Examples.
+Usage examples can be found in the module example folder \examples.
+
+## Finding Help
+
+Use the PowerShell help system to get examples and parameter help for each CmdLet as the example below.
+
+```powershell
+Get-Help Get-SLEncInfo
+Get-Help Get-SLEncInfo -Parameter personal
+Get-Help Get-SLEncInfo -Examples
+```
+
+--- This is the end of the file ---

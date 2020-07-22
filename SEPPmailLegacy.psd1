@@ -12,7 +12,7 @@
 RootModule = '.\SEPPmailLegacy.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.8.0'
+ModuleVersion = '0.8.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core','Desktop')
@@ -30,8 +30,8 @@ CompanyName = 'SEPPmail AG'
 Copyright = '(c) SEPPmail AG. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Receive data and manage GINA-Users from your SEPPmail Appliance beginning with SEPPmail Version 11.1.9.
-With the Legacy-API you can retrieve statistics and encryption information via REST, including the option to mass-generate GINA-Users.
+Description = 'Receive data and manage Gina-Users from your SEPPmail Appliance beginning with SEPPmail Version 11.1.9.
+With the Legacy-API you can retrieve statistics and encryption information via REST, including the option to mass-generate Gina-Users.
 Even though the API is not officially supported, some people find it pretty useful.
 This PowerShell module is a wrapper around this API to allow more convenient operation and interaction from the command line.'
 
@@ -86,8 +86,9 @@ CmdletsToExport = @(
         'Get-SLEncInfo'
         'Get-SLGroupInfo'
         'Get-SLStatsInfo'
-        'New-SLGINAUser'
-        'Set-SLGINAUser'
+        'Get-SLGinaUser'
+        # v1.1'New-SLGinaUser'
+        'Set-SLGinaUser'
         )
 
 # Variables to export from this module
@@ -142,20 +143,22 @@ PrivateData = @{
         Changed Version to 0.6
 
 070720: 0.7 Test-Version for OS and version independency
-        Added Set-GINAUser CmdLet
+        Added Set-GinaUser CmdLet
 
 090720: 0.7.5 Updated Readme.md and examples.md
         Extended CSV file for Set-SLGinaUser
         Added parameter help
-        Added error handling for GINA CmdLets
+        Added error handling for Gina CmdLets
 
 160720: 0.8.0 Prepare for PSGallery Upload
 
 170720: Cleaning up beta issues and prettify for PS Gallery
+
+210720: 0.8.1 Adding SkipCertificateCheck and Get-GinaUser
 '@
 
         # Prerelease string of this module
-        Prerelease = 'RC1'
+        Prerelease = 'RC2'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false
