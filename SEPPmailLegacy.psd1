@@ -154,7 +154,7 @@ PrivateData = @{
 
 170720: Cleaning up beta issues and prettify for PS Gallery
 
-210720: 0.8.1 Adding SkipCertificateCheck and Get-GinaUser
+210720: 0.8.1 Adding SkipCertificateCheck and fixing some cosmetics
 '@
 
         # Prerelease string of this module

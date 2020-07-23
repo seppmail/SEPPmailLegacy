@@ -6,12 +6,9 @@
 .EXAMPLE
     PS> Set-SLConfig -SEPPmailFQDN securemail.contoso.de
     This will read the config file for the FQDN and set it as current config (stores in in the global variable $SLConfig)
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-.NOTES
-    General notes
+.EXAMPLE
+    PS> Set-SLConfig -SEPPmailFQDN securemail.contoso.de -SetasDefault
+    This will read the config file for the FQDN and set it as current config and overwrites the default config file SLCurrent.config
 #>
 
 function Set-SLConfig
@@ -23,8 +20,13 @@ function Set-SLConfig
             Mandatory = $false,
             ValueFromPipelineByPropertyName = $true
         )]
-        [String]$SEPPmailFQDN
+        [String]$SEPPmailFQDN,
 
+        [Parameter(
+            Mandatory = $false,
+            HelpMessage = 'Overwrites the default config file SLCurrent.Config so that future requests use the new config'
+        )]
+        [switch]$setAsDefault = $false
     )
 
     begin
@@ -53,7 +55,7 @@ function Set-SLConfig
 
         Write-Verbose "Check if the $SEPPmailFQDN.config file contains all needed properties"
         $conf = Get-Content $SLConfigFilePath | ConvertFrom-Json
-        If ((!($conf.SEPPmailFQDN)) -or (!($conf.Secret)) -or (!($conf.AdminPort)) -or (!($conf.SkipCertificateCheck)))
+        If ((!($conf.SEPPmailFQDN)) -or (!($conf.Secret)) -or (!($conf.AdminPort)))
         {
             Write-Warning -Message "Configuration incomplete! Run New-SLConfig to create a proper configuration"
             break
@@ -70,11 +72,12 @@ function Set-SLConfig
         {
             $secureSecret = Import-Clixml -Path $SecFilePath
         }
-        <#
-        Write-Verbose "Writing default-Config File"
-        $defaultconfigFilePath = Join-Path $SLConfigFilePath -ChildPath 'CurrentConfig.config'
-        $conf = Set-Content $defaultconfigFilePath | ConvertFrom-Json
-        #>
+        if ($setAsDefault -eq $true) {
+            Write-Verbose "Writing default-Config File SLCurrent.config"
+            $defaultconfigFilePath = Join-Path $SLConfigPath -ChildPath 'SLCurrent.config'
+            Set-Content $defaultconfigFilePath -Value ($conf| ConvertTo-Json)
+        }
+
         Write-Verbose "Writing securesecret to config variable."
         $global:SLConfig = [ordered]@{
             SEPPmailFQDN         = $conf.SEPPmailFQDN
@@ -82,6 +85,7 @@ function Set-SLConfig
             AdminPort            = $conf.Adminport
             SkipCertificateCheck = $true
         }
+
     }
     
     end
@@ -103,7 +107,7 @@ function Set-SLConfig
     PS> New-SLConfig -SEPPmailFQDN securemail.contoso.de -UserName Legacyadmin@contoso.de
     This will create the config file for the FQDN.
 .EXAMPLE
-    PS> New-SLConfig -SEPPmailFQDN localhost -UserName Legacyadmin@contoso.de -SkipCertificateCheck
+    PS> New-SLConfig -SEPPmailFQDN localhost -UserName Legacyadmin@contoso.de -SkipCertificateCheck $true
     This will create the config file for the FQDN and will not run Certificatechecks on this machine.
 .EXAMPLE
     PS> New-SLConfig -SEPPmailFQDN securemail.contoso.de -UserName Legacyadmin@contoso.de -AdminPort 10443
@@ -139,9 +143,9 @@ function New-SLConfig
         [Parameter(
             Mandatory = $false,
             ValueFromPipelineByPropertyName = $true,
-            HelpMessage = 'For testmachines which have no valid certificates, turn this on by simply adding -SkipCertificateCheck in the commandline')]
+            HelpMessage = 'For testmachines which have no valid certificates, turn this on by simply adding -SkipCertificateCheck $true in the commandline')]
         [Alias("Skip")]
-        [switch]$SkipCertificateCheck = $false,
+        [bool]$SkipCertificateCheck = $false,
          
         [Parameter(
             Mandatory = $false,
@@ -203,7 +207,7 @@ function New-SLConfig
     to read some data
 .EXAMPLE
     PS C:\> Test-SLConfig -SEPPmailFQDN 'securemail.contoso.de'
-    Tests if legacyapi access to securemail.contoso.de works.
+    Tests if legacyapi access to securemail.contoso.de works and raises relevant errors.
 #>
 function Test-SLConfig
 {
@@ -212,7 +216,7 @@ function Test-SLConfig
 
     begin
     {
-        $conf = Set-SLConfig
+        Set-SLConfig
 
     }
     process
@@ -221,49 +225,49 @@ function Test-SLConfig
         {
             if ($IsWindows)
             {
-                if (!((Resolve-DnsName -Name $conf.SEPPmailFQDN -ErrorAction 0).IPAddress))
+                if (!((Resolve-DnsName -Name $SLConfig.SEPPmailFQDN -ErrorAction 0).IPAddress))
                 {
                     Write-Error "Could not resolve SEPPmailFQDN, please check DNS and FQDN Name!"
                 }
                 else
                 {
-                    Write-Host "DNS query to $($conf.SEPPmailFQDN) worked." -ForegroundColor Green
+                    Write-Host "DNS query to $($SLConfig.SEPPmailFQDN) worked." -ForegroundColor Green
                 }
             }
 
-            #((Test-Netconnection -ComputerName $conf.SEPPmailFQDN -Port $conf.AdminPort).TcpTestSucceeded)
-            if ($IsWindows)
+            #((Test-Netconnection -ComputerName $SLConfig.SEPPmailFQDN -Port $SLConfig.AdminPort).TcpTestSucceeded)
+            if ($IsWindows -or ($PSversiontable.PSEdition -eq 'Desktop'))
             {
-                if (!((Test-NetConnection -ComputerName $conf.SEPPmailFQDN -Port $conf.AdminPort -WarningAction SilentlyContinue).TcpTestSucceeded))
+                if (!((Test-NetConnection -ComputerName $SLConfig.SEPPmailFQDN -Port $SLConfig.AdminPort -WarningAction SilentlyContinue).TcpTestSucceeded))
                 {
-                    Write-Error "Could not connect to port $conf.AdminPort! Check Firewalls and Port configuration." 
+                    Write-Error "Could not connect to port $SLConfig.AdminPort! Check Firewalls and Port configuration." 
                 }
                 else
                 {
-                    Write-Host "TCP Connect to $($conf.SEPPmailFQDN) on Port $($conf.AdminPort) worked." -ForegroundColor Green
+                    Write-Host "TCP Connect to $($SLConfig.SEPPmailFQDN) on Port $($SLConfig.AdminPort) worked." -ForegroundColor Green
                 }
             }
             else
             {
-                if (!(Test-Connection -ComputerName $conf.SEPPmailFQDN -TcpPort $conf.AdminPort -WarningAction SilentlyContinue -Quiet))
+                if (!(Test-Connection -ComputerName $SLConfig.SEPPmailFQDN -TcpPort $SLConfig.AdminPort -WarningAction SilentlyContinue -Quiet))
                 {
-                    Write-Error "Could not connect to port $conf.AdminPort! Check Firewalls and Port configuration." 
+                    Write-Error "Could not connect to port $SLConfig.AdminPort! Check Firewalls and Port configuration." 
                 }
                 else
                 {
-                    Write-Host "TCP Connect to $($conf.SEPPmailFQDN) on Port $($conf.AdminPort) worked." -ForegroundColor Green
+                    Write-Host "TCP Connect to $($SLConfig.SEPPmailFQDN) on Port $($SLConfig.AdminPort) worked." -ForegroundColor Green
                 }
             }
             
             # Try login at SEPPmail and receive group INfo
 
-            $urlroot = New-SLUrlRoot -FQDN $conf.SEPPmailFQDN -adminPort $conf.adminPort
+            $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
             $uri = $urlroot + 'statistics' + '?' + 'returnType' + '=' + 'CSV'
             try 
             {
-                if ((Invoke-RestMethod -Uri $uri -Method GET -Authentication Basic -Credential $conf.secret | ConvertFrom-Csv -Delimiter ';' | Select-Object -First 1).Length -eq '1') 
+                if ((Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';' | Select-Object -First 1).Length -eq '1') 
                 {
-                    Write-Host "Data access with $($conf.secret.UserName) worked." -ForegroundColor Green
+                    Write-Host "Data access with $($SLConfig.secret.UserName) worked." -ForegroundColor Green
                 }
             }
             catch
@@ -349,23 +353,20 @@ function Remove-SLConfig
     }
 }
 
+<#
+.SYNOPSIS
+    List existing configurations
+.DESCRIPTION
+    Reads the .SEPPmailLegacy directory and reads all sonfig files.
+.EXAMPLE
+    PS C:\> Find-SLConfig
+    Lists all the configurations found, including parameters
+.EXAMPLE
+    PS C:\> Find-SLConfig -Config securemail.sontoso.de
+    List a specific config, including parameters
+#>
 function Find-SLConfig
 {
-    <#
-.SYNOPSIS
-    Lists available Configuration files
-.DESCRIPTION
-    Use this commandlet to get an overview of existing SEPPmail Legacy configurations (SLConfig).
-.EXAMPLE
-    PS> Find-SLConfig
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-.NOTES
-    General notes
-#>
-
     [CmdletBinding()]
     param (        
         [Parameter(
@@ -376,24 +377,34 @@ function Find-SLConfig
     )
     begin
     {
-        if ($ConfigName)
-        {
-            Write-Verbose 'Storing names $Configurations array'
-            $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config') -Exclude 'SLCurrent*' | Where-Object Name -Like $ConfigName)
+        try {
+            if ($ConfigName)
+            {
+                Write-Verbose 'Storing names $Configurations array'
+                $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config') -Exclude 'SLCurrent*' | Where-Object Name -Like $ConfigName)
+            }
+            else
+            {
+                Write-Verbose 'Storing $Configurations array of all configuration files'
+                $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config')-Exclude 'SLCurrent*')
+            }
         }
-        else
-        {
-            Write-Verbose 'Storing $Configurations array of all configuration files'
-            $Configurations = @(Get-ChildItem -Path (Join-Path $SLConfigPath -ChildPath '\*.config')-Exclude 'SLCurrent*')
+        catch {
+            Write-Error "Find-SLConfig failes with error $_.CategoryInfo"
         }
     }
     process
     {
-        Write-Verbose 'Looping through $configurations array'
-        foreach ($conf in $Configurations)
-        {
-            Write-Verbose 'Emit Configuration'
-            Get-Content $conf | ConvertFrom-Json
+        try {
+            Write-Verbose 'Looping through $configurations array'
+            foreach ($conf in $Configurations)
+            {
+                Write-Verbose 'Emit Configuration'
+                Get-Content $conf | ConvertFrom-Json
+            }
+        }
+        catch {
+            Write-Error "Find-SLConfig failes with error $_.CategoryInfo"
         }
     }
     end
