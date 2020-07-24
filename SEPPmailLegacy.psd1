@@ -12,7 +12,7 @@
 RootModule = '.\SEPPmailLegacy.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.8.1'
+ModuleVersion = '0.8.2'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core','Desktop')
@@ -86,8 +86,8 @@ CmdletsToExport = @(
         'Get-SLEncInfo'
         'Get-SLGroupInfo'
         'Get-SLStatsInfo'
-        'Get-SLGinaUser'
-        # v1.1'New-SLGinaUser'
+        # v1.1'Get-SLGinaUser'
+        'New-SLGinaUser'
         'Set-SLGinaUser'
         )
 
@@ -155,6 +155,8 @@ PrivateData = @{
 170720: Cleaning up beta issues and prettify for PS Gallery
 
 210720: 0.8.1 Adding SkipCertificateCheck and fixing some cosmetics
+
+240720: Fixed some bugs after testing Ubuntu
 '@
 
         # Prerelease string of this module

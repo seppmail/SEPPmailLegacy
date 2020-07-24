@@ -63,3 +63,44 @@ function Convert-SLRestError {
     end {
     }
 }
+
+<#
+.SYNOPSIS
+    Calls the REST interface with Parameters
+.DESCRIPTION
+    Depending on the PS Version/Edition, calls the REST Method with proper settings and valid parameters.
+    For Module internal use only.
+#>
+function Invoke-SLRestMethod {
+    [CmdletBinding()]
+    param(
+        [Parameter(
+            Mandatory=$true
+            )]
+        [string]$uri,
+
+        [Parameter(
+            Mandatory=$true
+            )]
+        [ValidateSet('GET','POST','PUT','DELETE','PATCH')]
+        [string]$Method,
+        
+        [Parameter(
+                Mandatory=$true
+            )]
+        [PSCredential]$Credential,
+
+        [Parameter(
+            Mandatory=$true
+        )]
+        [bool]$SkipcertificateCheck
+        )
+
+    If ($PSversiontable.PSversion -like '5.*') {
+        Invoke-RestMethod -Uri $uri -Method $Method -Credential $credential
+    }
+    If ($PSversiontable.PSEdition -like 'Core') {
+        Invoke-RestMethod -Uri $uri -Method $Method -Credential $credential -SkipCertificateCheck $SkipcertificateCheck
+    }
+
+}
