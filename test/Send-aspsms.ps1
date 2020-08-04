@@ -1,7 +1,7 @@
 [CmdLetBinding()]
 param(
-    $mobile = "+436644306631",
-    $text = "SMS from SEPPmail"
+    $mobile,
+    $text
 )
 
 #region mit aspsms.com
@@ -20,8 +20,6 @@ $smsJSONBody = ConvertTo-Json $smsBodyHt
 
 $urlext = '/SendSimpleTextSMS'
 $uri = "$baseurl"+"$urlext"
-Invoke-RestMethod -Credential $cred -Authentication Basic -Uri $uri -Method POST -body $smsJSONBody|Tee-object -Variable SMSSend
-#$response = Invoke-RestMethod -Credential $cred -Authentication Basic -Uri $uri -Method POST -body $smsJSONBody
+Invoke-RestMethod -Credential $cred -Uri $uri -Method POST -body $smsJSONBody
 
-#endregion
-#region SendTextSMS
+

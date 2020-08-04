@@ -7,17 +7,21 @@ Below, find some examples on how to use the module. The modulesCmdLets output ar
 ## Creating a new configuration file with New-SLConfig
 
 You need to run this before operating the module otherwise it will not know where to connect to.
+
 ```powershell
 New-SLConfig
 ```
+
 The CmdLet asks for FQDN and credential parameters and creates a config file with the name `FQDN.config`, (i.e. `securemail.contoso.de.config`).
 
 By default it also copies this file to the `SLCurrent.config` file which is the default configuration. You can turn off this behavior by using the `-notcurrent` parameter.
+
 ```powershell
 New-SLConfig -notcurrent
 ```
 
 If you want to immediately operate with the config use:
+
 ```powershell
 $global:SLConfig = New-SLConfig
 ```
@@ -26,16 +30,20 @@ $global:SLConfig = New-SLConfig
 
 As most customers have multiple SEPPmail instances (test and prod), you can store multiple config files and use them.
 
-Calling 
+Calling
+
 ```powershell
 Set-SLConfig
 ```
+
 will always try to read the default config file SLCurrent.config and load it, except you specify a different FQDN via the `-SEPPmailFQDN` parameter.
 
 So if you have created multiple config files with `New-SLconfig`,
+
 ```powershell
 Set-SLConfig
 ```
+
 can switch between them.
 
 ### Testing if a configuration works
@@ -43,6 +51,7 @@ can switch between them.
 ```powershell
 Test-SLConfig
 ```
+
 tests the config by trying to reach the SEPPmail appliance and retrieve some data.
 
 ## Use the SEPPmailLegacy Module
@@ -98,9 +107,11 @@ Get-SLGroupInfo -GroupName legacyappadmin
 ### Encryption Information examples
 
 SEPPmail stores information which encryption capabilities are available for an external recipient. The CmdLet
+
 ```powershell
 Get-SLEncInfo
 ```
+
 can retrieve this data.
 This CmdLets support the `-rebuild` parameter to get current infos of the statistics database.
 
@@ -184,6 +195,7 @@ to communicate via a second channel.
 #### Create a New GINA-User
 
 To create a new GINA user use the CmdLet as below.
+
 ```powershell
 New-SLGINAUser -userName 'Max Mustermann' -eMailAddress max.mustermann@test.co -oneTimePw 'hZ76$59' -mobile '+49123456789'
 ```
@@ -199,6 +211,7 @@ Import-Csv .\examples\NewGINAUsers.csv|New-SLGINAUser
 
 To modify and add additional properties use Set-GINAUser. This CmdLet is also pipeline-aware.
 So either change single properties from the command line:
+
 ```powershell
 Set-SLGINAUser -eMailAddress 'alice.miller@contoso.com' -answer 'Red'
 ```
@@ -208,3 +221,5 @@ You can also pipe the data into the CmdLet for mass-changes.
 ```powershell
 Import-Csv .\examples\UpdateGINAUsers.csv|Set-SLGINAUser
 ```
+
+--- This is the end of the file ---
