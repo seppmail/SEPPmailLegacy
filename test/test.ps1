@@ -1,5 +1,6 @@
 $env:PSModulePath = $env:PSModulePath + ";C:\Users\roman.THEGALAXY\GitRepo"
 Import-Module seppmaillegacy
+set-slconfig -seppmailfqdn securemail.rconsult.at 
 
 # Create GINA User manually
 New-SLGinaUser -eMailAddress 'max.mustermann@contoso.at' -userName 'Max Mustermann' -pwd '0815Max'
