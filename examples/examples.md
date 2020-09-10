@@ -187,6 +187,18 @@ Get-SLStatsInfo -type user | Where-Object emailAddress -like 'internal.user@cont
 Get-SLStatsInfo -type domain|Where-Object domainname -like mustermann.com
 ```
 
+## Prepare encrypted user-mail data (S/MIME,PGP,GINA,TLS,Domain) for further processing in external data sources
+
+The command below will extract statistics of sent and received encrypted mails, filter only users (may be adapted) and export the result to a CSV file.
+
+```powershell
+#Create a Date-based filename for the report
+[string]$reportFileName = "{0:ddMMyyyy}" -f (Get-Date) + "-" + $SLConfig.SEPPmailFQDN + ".csv"
+
+# Get statistics, filter out admins and write it into a CSV file.
+Get-SLStatsInfo -rebuild|Where-Object {(($_.emailAddress -notlike '*admin*') -and ($_.emailAddress -notlike '*legacy*') -and ($_.emailAddress -notlike '*o365connector*'))}|select-Object emailAddress,smimeEncMailsSent,smimeEncMailsReceived,smimeSigMailsSent,smimeSigMailsReceived,openPGPEncMailsSent,openPGPEncMailsReceived,ginaEncMailsSent,ginaEncMailsReceived,smimeDomainEncMailsSent,smimeDomainEncMailsReceived,openPGPDomainEncMailsSent,openPGPDomainEncMailsReceived|Add-Member -NotePropertyName 'ReportDate' -NotePropertyValue (Get-Date) -PassThru|Export-Csv -Path $ReportFileName -Encoding UTF8 -NoTypeInformation -force
+```
+
 ### Manage GINA Users
 
 This API allows you to create and modify GINA Users. This avoids the registration process for external recipients and allows the usage of known passwords for the user (i.e. an invoice Number, social security number or similar) and the mobile number

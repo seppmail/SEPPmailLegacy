@@ -12,7 +12,7 @@
 RootModule = '.\SEPPmailLegacy.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.8.2'
+ModuleVersion = '0.8.5'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core','Desktop')
@@ -156,7 +156,9 @@ PrivateData = @{
 
 210720: 0.8.1 Adding SkipCertificateCheck and fixing some cosmetics
 
-240720: Fixed some bugs after testing Ubuntu
+240720: 0.8.2 Fixed some bugs after testing Ubuntu
+
+080920: 0.8.5 Adding Get-SLGinaUser
 '@
 
         # Prerelease string of this module

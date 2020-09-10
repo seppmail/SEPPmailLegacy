@@ -835,28 +835,38 @@ function Get-SLGinaUser
     {
         try {
             $urlRoot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
-
-            Write-Verbose "Passing eMailAddress: $eMailAddress, userName: $userName, mobile: $mobile, customer: $customer"
-            #############################
-            $uri = "{0}{1}{2}{3}{4}{5}" -f $urlroot, 'ginauser/get', $eMailAddress, $userName, $mobile, $customer
-            #############################
+            $uri = "{0}{1}" -f $urlroot, 'ginauser/get'
+            
+            if ($emailAddress -or $mobile -or $name -or $customer ) {
+                $uri = "{0}{1}" -f $uri, "?"
+            
+                if ($emailAddress) {
+                    $uri = "{0}{1}" -f $uri, "&email=%2A$emailAddress%2A"
+                }
+                if ($mobile) {
+                    $uri = "{0}{1}" -f $uri, "&mobile=%2A$mobile%2A"
+                }
+                if ($name) {
+                    $uri = "{0}{1}" -f $uri, "&name=%2A$name%2A"
+                }
+                if ($customer) {
+                    $uri = "{0}{1}" -f $uri, "&customer=%2A$customer%2A"
+                }
+            }
+            
             $invokeParam = @{
                 Uri         = $uri 
                 Method      = 'GET'
                 Credential  = $SLConfig.secret
                 ContentType = "application/json"
             }
-            Write-Verbose "Receiving GINA Users using URL $uri"
-            if ($PSCmdLet.ShouldProcess($uri,'Get GINA User')) {
-                $GetGinaUser = Invoke-RestMethod @invokeParam
-                Write-Verbose "ErrorCode $($SetGinaUser.ErrorCode)"
-                if (!($($GetGinaUser.errorCode))) {
-                    return $GetGinaUser.message
-                }
-            }
-            else {
-                Write-Error "SEPPmail returned error $($SetGinaUser.errorCode): $($SetGinaUser.ErrorMessage)"
-            }
+            
+            Write-Verbose "Call RESTSEPPmail REST-API $uri" 
+            $ginaUserRaw = Invoke-RestMethod @invokeparam
+            
+            Write-Verbose 'Filter data and return as PSObject'
+            $GetGinaUser = ($ginaUserRaw|Select-Object -ExcludeProperty errormessage,errorcode).psobject.Members|Where-Object membertype -eq noteproperty|Select-Object -expandproperty Value|Sort-Object
+            
         }
         catch {
                 Write-Error "An error occured, see $error"
