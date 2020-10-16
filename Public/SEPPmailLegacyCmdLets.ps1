@@ -21,7 +21,14 @@ function Get-SLLicenseInfo
             Mandatory = $false,
             HelpMessage = 'Receive a table with license summary info instead of single entries for each user'
         )]
-        [switch]$summary
+        [switch]$summary,
+
+        [Parameter(
+            Mandatory = $false,
+            HelpMessage = 'Rebuild cached stats info database'
+        )]
+        [switch]$rebuild = $false
+
     )
     
     begin
@@ -35,7 +42,17 @@ function Get-SLLicenseInfo
     process
     {
         $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
-        $uri = $urlroot + 'statistics' + '?rebuildList'
+
+        Write-Verbose "Adding rebuildList Parameter if set"
+        if ($rebuild)
+        {
+            $uri = $urlroot + 'statistics' + '?rebuildList=1'
+        }
+        else 
+        {
+            $uri = $urlroot + 'statistics'
+        }
+
         $invokeParam = @{
             Uri        = $uri
             Method     = 'GET'
@@ -73,7 +90,7 @@ function Get-SLLicenseInfo
             <# Total of 3 encryption/signature users with an account, 
             but 0 set to inactive and 2 did not send mails in the last three months
             #>
-            [psobject]$sum = @{
+            [psobject]$sum = [ordered]@{
                 'Total known users'                       = $totalKnownUsers
                 'Total ever used licenses'                = $totalLic
                 'Deactivated Licenses'                    = $inactiveLic
@@ -209,8 +226,10 @@ function Get-SLStatsInfo
 
     begin
     {
-        Set-SLConfig | Out-Null | Out-Null
-    }
+        if (!($SLConfig)) {
+            Write-Warning -Message 'No values in variable $SLConfig, please create a configration with New-SLConfig and set it with Set-SLConfig'
+            break
+        }    }
 
     process 
     {
@@ -218,16 +237,16 @@ function Get-SLStatsInfo
         $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
             if ($rebuild)
             {
-                $uribase = $urlroot + 'statistics' + '?' + 'returnType' + '=' + 'CSV' + '&rebuildList'
+                $uribase = $urlroot + 'statistics/' + '&rebuildList=1'
             }
             else 
             {
-                $uribase = $urlroot + 'statistics' + '?' + 'returnType' + '=' + 'CSV'
+                $uribase = $urlroot + 'statistics/'
             }
 
             if ($type -like 'user') 
             {
-                $uri = $uribase + '&statisticsType=user'
+                $uri = $uribase + '?statisticsType=user'
                 $userStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
                 $userStatsRaw.'accountLastUsed'
                 $userArray = @()
@@ -238,9 +257,9 @@ function Get-SLStatsInfo
                     'userId'                        = if ((!($_.'User ID'))) { 'none' } else { [String]$_.'User ID' }
                     #'userId'                        = $_.'User ID'
                     'accountLastUsed'               = if (!($_.'Account last used')) { 'none' } else { [DateTime]$_.'Account last used' }
-                    'noEnc'                         = if (($_.'May not encrypt mails').Length -eq '0') { $true } else { $false }
-                    'noDec'                         = if (($_.'May not decrypt mails').Length -eq '0') { $true } else { $false }
-                    'noSig'                         = if (($_.'May not sign mails').Length -eq '0') { $true } else { $false }
+                    'noEnc'                         = if (($_.'May not encrypt mails').Length -eq '0') { $false } else { $true }
+                    'noDec'                         = if (($_.'May not decrypt mails').Length -eq '0') { $false } else { $true }
+                    'noSig'                         = if (($_.'May not sign mails').Length -eq '0') { $false } else { $true }
                     'groupMembership'               = [String[]]$_.'Group membership'
                     'regUser'                       = if ($_.'Registered user' -eq '0') { $false } else { $true }
                     'usesLicense'                   = if ($_.'Uses License' -eq '0') { $false } else { $true }
@@ -266,7 +285,7 @@ function Get-SLStatsInfo
             }
             if ($type -like 'domain') 
             {
-            $uri = $uribase + '&statisticsType=domain'
+            $uri = $uribase + '?statisticsType=domain'
             $domStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
             Write-Verbose "Creating output Hashtables"
             $domArray = @()
