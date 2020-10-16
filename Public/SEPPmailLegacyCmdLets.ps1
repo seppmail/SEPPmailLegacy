@@ -26,26 +26,35 @@ function Get-SLLicenseInfo
     
     begin
     {
-        Set-SLConfig | Out-Null
+        if (!($SLConfig)) {
+            Write-Warning -Message 'No values in variable $SLConfig, please create a configration with New-SLConfig and set it with Set-SLConfig'
+            break
+        }
     }
     
     process
     {
         $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
-        $uri = $urlroot + 'statistics' + '?' + 'returnType' + '=' + 'CSV'
-        $csvstats = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
+        $uri = $urlroot + 'statistics' + '?rebuildList'
+        $invokeParam = @{
+            Uri        = $uri
+            Method     = 'GET'
+            Credential = $SLConfig.secret
+        }
+        $restData = Invoke-RestMethod @invokeParam | ConvertFrom-Csv -Delimiter ';'
+        
         #'Account last used' Datum länger als 3 Monate her - keine Lizenz
         # wenn 'May not sign mails'-like 'YES' UND 'May not encrypt mails' -like 'YES - keine Lizenz verbraucht == Deaktiviert
 
         # Transform output to HT-Array and make sure to have proper values everywhere. 
         $statsarray = @()
-        $statsArray = $csvstats | Select-Object 'User ID', 'Registered User', 'May not sign mails', 'May not encrypt mails', 'Account last used'`
+        $statsArray = $restData | Select-Object 'User ID', 'Registered User', 'May not sign mails', 'May not encrypt mails', 'Account last used'`
         | ForEach-Object {
             [ordered]@{    
                 'userid'   = if (($_.'User ID').Length -eq '0') { 'none' } else { $_.'User ID' };
                 'reguser'  = $_.'Registered user';
-                'nosig'    = if (($_.'May not sign mails').Length -eq '0') { $true } else { $false };
-                'noenc'    = if (($_.'May not encrypt mails').Length -eq '0') { $true } else { $false };
+                'nosig'    = if (($_.'May not sign mails').Length -eq '0') { $false } else { $true };
+                'noenc'    = if (($_.'May not encrypt mails').Length -eq '0') { $false } else { $true };
                 'lastused' = if (($_.'Account last used').Length -eq '0') { Get-Date -Day 1 -Month 1 -Year 2000 } else { Get-Date $_.'Account last used' }
             }
         }
@@ -457,7 +466,7 @@ function Get-SLEncInfo
                 if ($rawdata.tls.domain.domain) { $returndata | Add-Member -MemberType Noteproperty -Name TLSdomain -Value $rawdata.tls.domain.domain }
                 if ($rawdata.gina.personal.status) { $returndata | Add-Member -MemberType Noteproperty -Name GINAperonal -Value $rawdata.gina.personal.status }
                 return $returndata
-            }
+                }
             }
         } catch {
             Write-Error "Request to SEPPmail appliance failed with exception $($_.Exception)"

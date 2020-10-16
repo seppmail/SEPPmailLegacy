@@ -216,8 +216,10 @@ function Test-SLConfig
 
     begin
     {
-        Set-SLConfig
-
+        if (!($SLConfig)) {
+            Write-Warning -Message 'No values in variable $SLConfig, please create a configration with New-SLConfig and set it with Set-SLConfig'
+            break
+        }
     }
     process
     {
