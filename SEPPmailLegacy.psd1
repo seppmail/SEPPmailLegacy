@@ -12,7 +12,7 @@
 RootModule = '.\SEPPmailLegacy.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.8.5'
+ModuleVersion = '0.8.6'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core','Desktop')
@@ -78,6 +78,7 @@ ScriptsToProcess = @('ModuleInit.ps1')
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @(
         'New-SLConfig'
+        'Get-SLConfig'
         'Set-SLConfig'
         'Test-SLConfig'
         'Remove-SLConfig'
@@ -159,10 +160,12 @@ PrivateData = @{
 240720: 0.8.2 Fixed some bugs after testing Ubuntu
 
 080920: 0.8.5 Adding Get-SLGinaUser
+
+161020: Fixing issues #12, #17, #18
 '@
 
         # Prerelease string of this module
-        Prerelease = 'RC2'
+        Prerelease = 'RC3'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false

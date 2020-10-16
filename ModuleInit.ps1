@@ -32,18 +32,14 @@ try {
         Write-Warning "No configuration file in default configuration path $SLConfigPath found."
         Write-Warning "Run New-SLConfig, otherwise the module will not work."
     } else {
-        "Using Configuration from default config path $SLConfigFilePath"
-        Get-content $SLConfigFilePath|convertfrom-JSON
+        Write-Verbose "Using Configuration from default config path $SLConfigFilePath"
+        $defaultconfig = Get-content $SLConfigFilePath|convertfrom-JSON
+        Set-SLConfig -SEPPmailFQDN $defaultconfig.SEPPmailFQDN
     }
 }
 catch {
     Write-Error "ModuleInit.ps1 failed with error $_.CategoryInfo"
 }
-
-
-
-
-
 
 # SIG # Begin signature block
 # MIIL1wYJKoZIhvcNAQcCoIILyDCCC8QCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB

@@ -139,10 +139,12 @@ function Get-SLGroupInfo
 
     begin
     {
-        #Write-Verbose 'Writing SLConfig to $global:SLConfig'
-        Set-SLConfig | Out-Null
+        Write-Verbose 'Reading config from global Variable $SLconfig'
+        if (!($SLConfig)) {
+            Write-Warning -Message 'No values in variable $SLConfig, please create a configration with New-SLConfig and/or set it with Set-SLConfig'
+            break
+        }
     }
-
     process
     {
         $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
@@ -226,10 +228,12 @@ function Get-SLStatsInfo
 
     begin
     {
+        Write-Verbose 'Reading config from global Variable $SLconfig'
         if (!($SLConfig)) {
-            Write-Warning -Message 'No values in variable $SLConfig, please create a configration with New-SLConfig and set it with Set-SLConfig'
+            Write-Warning -Message 'No values in variable $SLConfig, please create a configration with New-SLConfig and/or set it with Set-SLConfig'
             break
-        }    }
+        }
+    }
 
     process 
     {
@@ -416,13 +420,17 @@ function Get-SLEncInfo
     
     begin
     {
-        Set-SLConfig | Out-Null
-        $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
+        Write-Verbose 'Reading config from global Variable $SLconfig'
+        if (!($SLConfig)) {
+            Write-Warning -Message 'No values in variable $SLConfig, please create a configration with New-SLConfig and/or set it with Set-SLConfig'
+            break
+        }
     }
     
     process
     {
         try {
+            $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
             if ($PSCmdlet.ParameterSetName -eq 'personal') 
             {
             #$uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', ($encModePer ? '/' + $encModePer.ToUpper():$null), ($eMailAddress ? '?mailAddress=' + $eMailAddress.ToLower():$null), ($rebuild ? '?rebuildList=1':$null)
@@ -487,7 +495,8 @@ function Get-SLEncInfo
                 return $returndata
                 }
             }
-        } catch {
+        } 
+        catch {
             Write-Error "Request to SEPPmail appliance failed with exception $($_.Exception)"
         }
     }
@@ -581,12 +590,10 @@ function New-SLGinaUser
     )
     begin
     {
-        try {
-            Set-SLConfig | Out-Null
-        }
-        catch {
-            Write-error "Could not load configuration with set-SLConfig"
-            Write-Error $_
+        Write-Verbose 'Reading config from global Variable $SLconfig'
+        if (!($SLConfig)) {
+            Write-Warning -Message 'No values in variable $SLConfig, please create a configration with New-SLConfig and/or set it with Set-SLConfig'
+            break
         }
     }
     process {
@@ -736,13 +743,19 @@ function Set-SLGinaUser
     
     begin
     {
-        try {
+        Write-Verbose 'Reading config from global Variable $SLconfig'
+        if (!($SLConfig)) {
+            Write-Warning -Message 'No values in variable $SLConfig, please create a configration with New-SLConfig and/or set it with Set-SLConfig'
+            break
+        }
+
+        <#try {
             Set-SLConfig | Out-Null
         }
         catch {
             Write-error "Could not load configuration with Set-SLConfig"
             Write-Error "$error"
-        }
+        }#>
     }
     
     process
@@ -850,12 +863,10 @@ function Get-SLGinaUser
     
     begin
     {
-        try {
-            Set-SLConfig | Out-Null
-        }
-        catch {
-            Write-error "Could not load configuration with Set-SLConfig"
-            Write-Error "$error"
+        Write-Verbose 'Reading config from global Variable $SLconfig'
+        if (!($SLConfig)) {
+            Write-Warning -Message 'No values in variable $SLConfig, please create a configration with New-SLConfig and/or set it with Set-SLConfig'
+            break
         }
     }
     

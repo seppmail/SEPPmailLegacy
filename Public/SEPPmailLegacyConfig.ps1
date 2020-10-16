@@ -1,5 +1,52 @@
 <#
 .SYNOPSIS
+    Gets the Config to a defined SEPPmail instance and credential
+.DESCRIPTION
+    Use this commandlet to read the current SEPPmail Legacy configuration (SLConfig) for the SL Commandlets. Each SLConfig is stored with its FQND and the extension .config in the SLConfig directory. If you run Set-SLConfig, you need to specify a FQDN for a SEPPmail. The CmdLet reads the config, copies it over the default config (current.config) from the global $SLConfig variable for use with other CmdLets.
+.EXAMPLE
+    PS> Get-SLConfig
+    This will read the config $SLConfig and emits it to the console asl PSObject
+#>
+
+function Get-SLConfig
+{
+
+    [CmdletBinding()]
+    param ()
+
+    begin
+    {
+    }
+    
+    process
+    {
+        Write-Verbose "Reading Variable $global:SLConfig"
+        if ($null -eq $global:SLCOnfig) {
+            Write-Error 'Variable $SLconfig is empty, create a new config with New-SLConfig'
+            break
+        }
+        else {
+            Write-Verbose "Emitting readable content of $global:SLconfig"
+        
+            $activeConf = [ordered]@{
+                SEPPmailFQDN = $SLConfig.SEPPmailFQDN
+                Secret = $SLConfig.Secret.UserName
+                AdminPort = $SLConfig.AdminPort
+                SkipCertificateCheck = $Slconfig.SkipCertificateCheck
+                }
+        return $activeconf
+
+        }
+    }
+    
+    end
+    {
+    }
+}
+
+
+<#
+.SYNOPSIS
     Sets the Config to a defined SEPPmail instance and credential
 .DESCRIPTION
     Use this commandlet to define a SEPPmail Legacy configuration (SLConfig) for the SL Commandlets. Each SLConfig is stored with its FQND and the extension .config in the SLConfig directory. If you run Set-SLConfig, you need to specify a FQDN for a SEPPmail. The CmdLet reads the config, copies it over the default config (current.config) and loads it into the $SLConfig variable for use with other CmdLets.
@@ -17,7 +64,7 @@ function Set-SLConfig
     [CmdletBinding()]
     param (
         [Parameter(
-            Mandatory = $false,
+            Mandatory = $true,
             ValueFromPipelineByPropertyName = $true
         )]
         [String]$SEPPmailFQDN,
@@ -26,7 +73,7 @@ function Set-SLConfig
             Mandatory = $false,
             HelpMessage = 'Overwrites the default config file SLCurrent.Config so that future requests use the new config'
         )]
-        [switch]$setAsDefault = $false
+        [bool]$setAsDefault = $true
     )
 
     begin
@@ -36,17 +83,8 @@ function Set-SLConfig
     
     process
     {
-        if ($SEPPmailFQDN)
-        {
-            Write-Verbose "Check if a file $SEPPmailFQDN.config exists"
-            $SLConfigFilePath = (Join-Path -Path $SLConfigPath -ChildPath $SEPPmailFQDN) + '.config'
-        }
-        else
-        {
-            Write-Verbose "No FQDN specified, load default config file"
-            $SLConfigFilePath = Join-Path -Path $SLConfigPath -ChildPath 'SLCurrent.config'
-        }
-
+        Write-Verbose "Check if a file $SEPPmailFQDN.config exists"
+        $SLConfigFilePath = (Join-Path -Path $SLConfigPath -ChildPath $SEPPmailFQDN) + '.config'
         if (!(Test-Path $SLConfigFilePath))
         {
             Write-Warning 'Configuration file does not exist - please check FQDN or create a new configuration with New-SLConfig'
@@ -92,7 +130,7 @@ function Set-SLConfig
     {
         if (!(Test-Path $SLConfigFilePath))
         {
-            Write-Warning 'There is no current configuration file defined (SLConfig.config). Run New-SLConfig without the -NotCurrent parameter to create one.'
+            Write-Warning 'There is no current configuration file defined (SLConfig.config). Run Set-SLConfig -SEPPmailFQDN "secmail.contoso.at" -setAsDefault $true'
         }
         return $conf
     }
@@ -149,7 +187,7 @@ function New-SLConfig
          
         [Parameter(
             Mandatory = $false,
-            HelpMessage = 'Set if you do NOT want this new config to be set as default'
+            HelpMessage = 'Set this to $true if you do NOT want this new config to be set as default'
         )]
         [Switch]$NotCurrent = $false
 
