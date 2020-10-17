@@ -84,25 +84,36 @@ function Invoke-SLRestMethod {
             )]
         [ValidateSet('GET','POST','PUT','DELETE','PATCH')]
         [string]$Method,
-        
+
         [Parameter(
-                Mandatory=$true
+            Mandatory=$false
             )]
-        [PSCredential]$Credential,
+        [string[]]$body,
 
         [Parameter(
-            Mandatory=$true
-        )]
-        [bool]$SkipcertificateCheck
-        )
+            Mandatory=$false
+            )]
+        [string]$ContentType
 
-    If ($PSversiontable.PSversion -like '5.*') {
-        Invoke-RestMethod -Uri $uri -Method $Method -Credential $credential
-    }
-    If ($PSversiontable.PSEdition -like 'Core') {
-        Invoke-RestMethod -Uri $uri -Method $Method -Credential $credential -SkipCertificateCheck $SkipcertificateCheck
+    )
+
+    $SLInvokeParam = @{
+        Uri         = $uri
+        Method      = $Method
+        Credential  = $SLConfig.Secret
     }
 
+    if ($null -ne $body) { $SLInvokeParam.body = $body }
+    if ($null -ne $ContentType) { $SLInvokeParam.ContentType = $ContentType}
+
+    If (($PSversiontable.PSEdition -like 'Core') -and ($SLConfig.SkipcertificateCheck = $true)) {
+        Write-Verbose "Calling $($slinvokeparam.Uri) WITH SkipCertificateCheck"
+        Invoke-RestMethod @SLInvokeParam -SkipCertificateCheck
+    }
+    else {
+        Write-Verbose "Calling $($slinvokeparam.Uri) with SkipCertificateCheck"
+        Invoke-RestMethod @SLInvokeParam
+    }
 }
 
 # SIG # Begin signature block

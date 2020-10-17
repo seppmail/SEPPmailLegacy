@@ -56,9 +56,8 @@ function Get-SLLicenseInfo
         $invokeParam = @{
             Uri        = $uri
             Method     = 'GET'
-            Credential = $SLConfig.secret
         }
-        $restData = Invoke-RestMethod @invokeParam | ConvertFrom-Csv -Delimiter ';'
+        $restData = Invoke-SLRestMethod @invokeParam | ConvertFrom-Csv -Delimiter ';'
         
         #'Account last used' Datum länger als 3 Monate her - keine Lizenz
         # wenn 'May not sign mails'-like 'YES' UND 'May not encrypt mails' -like 'YES - keine Lizenz verbraucht == Deaktiviert
@@ -150,16 +149,20 @@ function Get-SLGroupInfo
         $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
         $uri = $urlroot + 'groupinfo' + '?' + 'returnType' + '=' + 'CSV'
         Write-Verbose 'Call REST-API'
-        $groupraw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
+        $invokeParam = @{
+            Uri        = $uri
+            Method     = 'GET'
+        }
+        $restData = Invoke-SLRestMethod @invokeParam | ConvertFrom-Csv -Delimiter ';'
         
         Write-Verbose 'Transform output to HT-Array and make sure to have proper values everywhere. '
         # [0] returns object with 2 members 'group name' and 'member names'
         # GroupName param set
         if ($groupName)
         {
-            if ($groupraw | Where-Object { $_.'group name' -like $groupName })
+            if ($restData | Where-Object { $_.'group name' -like $groupName })
             {
-                $groupraw | Where-Object { $_.'group name' -like $groupName }
+                $restData | Where-Object { $_.'group name' -like $groupName }
             }
             else
             {
@@ -170,7 +173,7 @@ function Get-SLGroupInfo
 
         if ($memberName)
         {
-            foreach ($group in $groupraw) 
+            foreach ($group in $restData) 
             {
                 [string[]]$members = $group.'member names' -replace ' ', '' -split ','
                 foreach ($m in $members) 
@@ -186,7 +189,7 @@ function Get-SLGroupInfo
         # Ausgabe der Daten wenn keine Parameter angegeben werden
         if ((!($groupName)) -and (!($membername))) 
         {
-            return $groupraw
+            return $restData
         }
 
     }
@@ -251,10 +254,14 @@ function Get-SLStatsInfo
             if ($type -like 'user') 
             {
                 $uri = $uribase + '?statisticsType=user'
-                $userStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
-                $userStatsRaw.'accountLastUsed'
+                $invokeParam = @{
+                    Uri        = $uri
+                    Method     = 'GET'
+                }
+                $restData = Invoke-SLRestMethod @invokeParam | ConvertFrom-Csv -Delimiter ';'
+                Write-Verbose "Creating output Hashtables"
                 $userArray = @()
-                $userArray = $userStatsRaw | ForEach-Object `
+                $userArray = $restData | ForEach-Object `
                 {
                 [ordered]@{
                     'emailAddress'                  = [string]$_.'E-mail address'
@@ -283,17 +290,21 @@ function Get-SLStatsInfo
                     'hinDomainEncMailsSent'         = [int]$_.'HIN Domain encrypted mails sent'
                     'hinDomainEncMailsReceived'     = [int]$_.'HIN domain encrypted mails received'
                     'mailsReroutedToIncamail'       = [int]$_.'Mails rerouted to Incamail'
-                }
+                    }
                 }
                 return $userArray | ForEach-Object { [pscustomobject]$_ }
             }
             if ($type -like 'domain') 
             {
             $uri = $uribase + '?statisticsType=domain'
-            $domStatsRaw = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret | ConvertFrom-Csv -Delimiter ';'
+            $invokeParam = @{
+                Uri        = $uri
+                Method     = 'GET'
+            }
+            $restData = Invoke-SLRestMethod @invokeParam | ConvertFrom-Csv -Delimiter ';'
             Write-Verbose "Creating output Hashtables"
             $domArray = @()
-            $domArray = $domstatsraw | ForEach-Object `
+            $domArray = $restData | ForEach-Object `
             {
                 [ordered]@{
                     'domainName'                    = [string]$_.'Domain Name'
@@ -433,53 +444,60 @@ function Get-SLEncInfo
             $urlroot = New-SLUrlRoot -FQDN $SLConfig.SEPPmailFQDN -adminPort $SLConfig.adminPort
             if ($PSCmdlet.ParameterSetName -eq 'personal') 
             {
-            #$uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', ($encModePer ? '/' + $encModePer.ToUpper():$null), ($eMailAddress ? '?mailAddress=' + $eMailAddress.ToLower():$null), ($rebuild ? '?rebuildList=1':$null)
-            
-            Write-Verbose 'Constructing personal parameterset'
-            $encModePerParam = if ($encModePer) { '/' + "$($encModePer.ToUpper())" } else { $null }
-            $eMailParam = if ($eMailAddress) { '?mailAddress=' + "$($eMailAddress.ToLower())" } else { $null }
-            $rebuildParam = if ($rebuild) { '?rebuildList=1' } else { $null }
-            
-            Write-Verbose "passing encModeParam: $EncModePerParam, eMailParam: $eMailParam, rebuildParam: $rebuildParam"
-            $uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', $encModeParam, $eMailParam, $rebuildParam
-            Write-Verbose "Final URI: $URI"
+                #$uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', ($encModePer ? '/' + $encModePer.ToUpper():$null), ($eMailAddress ? '?mailAddress=' + $eMailAddress.ToLower():$null), ($rebuild ? '?rebuildList=1':$null)
+                
+                Write-Verbose 'Constructing personal parameterset'
+                $encModePerParam = if ($encModePer) { '/' + "$($encModePer.ToUpper())" } else { $null }
+                $eMailParam = if ($eMailAddress) { '?mailAddress=' + "$($eMailAddress.ToLower())" } else { $null }
+                $rebuildParam = if ($rebuild) { '?rebuildList=1' } else { $null }
+                
+                Write-Verbose "passing encModeParam: $EncModePerParam, eMailParam: $eMailParam, rebuildParam: $rebuildParam"
+                $uri = "{0}{1}{2}/personal{3}{4}" -f $urlroot, 'encinfo', $encModeParam, $eMailParam, $rebuildParam
+                Write-Verbose "Final URI: $URI"
             }
             elseif ($PSCmdlet.ParameterSetName -eq 'domain')
             {
-            #$uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', ($encModeDom ? '/' + $encModeDom.ToUpper():$null), ($rebuild ? '?rebuildList=1':$null)
-            
-            Write-Verbose 'Constructing domain parameterset'
-            $encModeDomParam = if ($encModeDom) { '/' + "$($encModeDom.ToUpper())" } else { $null }
-            $rebuildParam = if ($rebuild) { '?rebuildList=1' } else { $null }            
-            
-            Write-Verbose "passing encModeParam: $EncModeParam, eMailParam: $eMailParam, rebuildParam: $rebuildParam"
-            $uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', $encModeDomParam, $rebuildParam
-            Write-Verbose "Final URI: $URI"
+                #$uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', ($encModeDom ? '/' + $encModeDom.ToUpper():$null), ($rebuild ? '?rebuildList=1':$null)
+                
+                Write-Verbose 'Constructing domain parameterset'
+                $encModeDomParam = if ($encModeDom) { '/' + "$($encModeDom.ToUpper())" } else { $null }
+                $rebuildParam = if ($rebuild) { '?rebuildList=1' } else { $null }            
+                
+                Write-Verbose "passing encModeParam: $EncModeParam, eMailParam: $eMailParam, rebuildParam: $rebuildParam"
+                $uri = "{0}{1}{2}/domain{3}" -f $urlroot, 'encinfo', $encModeDomParam, $rebuildParam
+                Write-Verbose "Final URI: $URI"
             }
             elseif ($PSCmdlet.ParameterSetName -eq 'eMail')
             {
-            $uri = "{0}{1}/?mailAddress={2}" -f $urlroot, 'encinfo', $eMailAddress
+                $uri = "{0}{1}/?mailAddress={2}" -f $urlroot, 'encinfo', $eMailAddress
             }
-            $rawdata = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret
+            
+            $invokeParam = @{
+                Uri        = $uri
+                Method     = 'GET'
+            }
+            $restData = Invoke-SLRestMethod @invokeParam # | ConvertFrom-Csv -Delimiter ';'
+            
+            #$rawdata = Invoke-RestMethod -Uri $uri -Method GET -Credential $SLConfig.secret
             switch ($PSCmdlet.ParameterSetname) 
             {
             personal
             {
                 Switch ($encModePer)
                 {
-                    SMIME { return $rawdata.smime.personal }
-                    PGP { return $rawdata.pgp.personal }
-                    GINA { return $rawdata.gina.personal }
+                    SMIME { return $restData.smime.personal }
+                    PGP { return $restData.pgp.personal }
+                    GINA { return $restData.gina.personal }
                 }
             }
             domain
             {
                 switch ($encModeDom)
                 {
-                    SMIME { return $rawdata.smime.domain }
-                    PGP { return $rawdata.pgp.domain }
-                    HIN { return $rawdata.hin.domain }
-                    TLS { return $rawdata.tls.domain }
+                    SMIME { return $restData.smime.domain }
+                    PGP { return $restData.pgp.domain }
+                    HIN { return $restData.hin.domain }
+                    TLS { return $restData.tls.domain }
                 }
             }
             eMail 
@@ -614,13 +632,13 @@ function New-SLGinaUser
 
             $invokeParam = @{
                 Uri         = $uri 
-                Method      = 'POST '
-                Credential  = $SLConfig.secret
-                ContentType = "application/json"
+                Method      = 'POST'
+                ContentType = 'application/json'
                 body        = $userData
             }
             Write-Verbose "Creating new GINA User $userName with E-mailAdress $eMailAddress"
-            $NewGinaUser = Invoke-RestMethod @invokeParam
+            
+            $NewGinaUser = Invoke-SLRestMethod @invokeParam
             Write-Verbose "ErrorCode $($NewGinaUser.ErrorCode)"
             if (!($($NewGinaUser.errorCode))) {
                 return $NewGinaUser.message
@@ -748,14 +766,6 @@ function Set-SLGinaUser
             Write-Warning -Message 'No values in variable $SLConfig, please create a configration with New-SLConfig and/or set it with Set-SLConfig'
             break
         }
-
-        <#try {
-            Set-SLConfig | Out-Null
-        }
-        catch {
-            Write-error "Could not load configuration with Set-SLConfig"
-            Write-Error "$error"
-        }#>
     }
     
     process
@@ -780,14 +790,14 @@ function Set-SLGinaUser
 
             $invokeParam = @{
                 Uri         = $uri 
-                Method      = 'POST '
-                Credential  = $SLConfig.secret
-                ContentType = "application/json"
+                Method      = 'POST'
+                ContentType = 'application/json'
                 body        = $userData
             }
             Write-Verbose "Modifying GINA User $EMailAddress using URL $uri"
             if ($PSCmdLet.ShouldProcess($($userdata.eMailAddress),'Update GINA User')) {
-                $SetGinaUser = Invoke-RestMethod @invokeParam
+                
+                $SetGinaUser = Invoke-SLRestMethod @invokeParam
                 Write-Verbose "ErrorCode $($SetGinaUser.ErrorCode)"
                 if (!($($SETGinaUser.errorCode))) {
                     return $SetGinaUser.message
@@ -896,12 +906,12 @@ function Get-SLGinaUser
             $invokeParam = @{
                 Uri         = $uri 
                 Method      = 'GET'
-                Credential  = $SLConfig.secret
-                ContentType = "application/json"
+                ContentType = 'application/json'
             }
             
             Write-Verbose "Call RESTSEPPmail REST-API $uri" 
-            $ginaUserRaw = Invoke-RestMethod @invokeparam
+            
+            $ginaUserRaw = Invoke-SLRestMethod @invokeparam
             
             Write-Verbose 'Filter data and return as PSObject'
             $GetGinaUser = ($ginaUserRaw|Select-Object -ExcludeProperty errormessage,errorcode).psobject.Members|Where-Object membertype -eq noteproperty|Select-Object -expandproperty Value|Sort-Object
